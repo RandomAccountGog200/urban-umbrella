@@ -388,23 +388,40 @@
 (() => {
   const API = "https://openrouter.ai/api/v1";
   const ENHANCER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
-  const VIDEO_MODEL = { id: "heygen/heygen-video-1", name: "HeyGen Video 1", mark: "H" };
+  const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  // Video models. `caps` are fallbacks used until OpenRouter's live model list
+  // (GET /videos/models) loads; after that the live values win. `refs` are each
+  // model's documented reference limits. `match` finds the model in the live list
+  // if OpenRouter uses a slightly different id.
+  const VIDEO_MODELS = [
+    { id: "heygen/heygen-video-1", name: "HeyGen Video 1", mark: "H", note: "Clips with dialogue, ambience and effects",
+      caps: { durations: range(5, 15), resolutions: ["480p", "768p"], aspects: [], frames: ["first_frame"], audio: true, seed: false },
+      refs: { image: 9, video: 3, audio: 3, total: 12 } },
+    { id: "alibaba/wan-3.0", name: "Wan 3.0", mark: "W", note: "Up to 30s at 1080p · ~$0.043/s",
+      caps: { durations: range(2, 30), resolutions: ["480p", "720p", "1080p"], aspects: ["16:9", "4:3", "1:1", "3:4", "9:16"], frames: ["first_frame"], audio: true, seed: true },
+      refs: { image: 10, video: 5, audio: 5, total: 20 } },
+    { id: "bytedance/seedance-2.5", name: "Seedance 2.5", mark: "S", note: "Up to 30s, many references · ~$0.10/s",
+      caps: { durations: range(4, 30), resolutions: ["480p", "720p"], aspects: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"], frames: ["first_frame", "last_frame"], audio: true, seed: true },
+      refs: { image: 30, video: 10, audio: 10, total: 50 } },
+    { id: "google/gemini-omni-1.1-flash", name: "Gemini Omni Flash 1.1", mark: "G", note: "Fast video from text, images or video",
+      match: (m) => /gemini[-\s]?omni/i.test(m.id + " " + m.name) && /1\.1/.test(m.id + " " + m.name),
+      caps: { durations: range(3, 10), resolutions: ["720p", "1080p"], aspects: ["16:9", "9:16"], frames: ["first_frame"], audio: true, seed: false },
+      refs: { image: 3, video: 1, audio: 0, total: 4 } },
+  ];
   const IMAGE_MODELS = [
     { id: "openai/gpt-image-2", name: "GPT Image 2", note: "~$0.006 / image", mark: "G" },
     { id: "black-forest-labs/flux.2-klein-4b", name: "FLUX.2 Klein 4B", note: "~$0.014 / image", mark: "F" },
     { id: "sourceful/riverflow-v2.5-fast", name: "Riverflow v2.5 Fast", note: "~$0.018 / image", mark: "R" },
   ];
   const IMAGE_ASPECTS = ["Auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "9:21"];
-  const VIDEO_ASPECTS = ["Auto", "16:9", "9:16", "1:1", "4:3", "3:4", "21:9"];
-  const VIDEO_RES = [{ v: "480p", note: "Cheaper" }, { v: "768p", note: "Sharper" }];
 
-  // Reference limits. HeyGen allows up to 9 images, 3 videos and 3 audio clips (12 total).
-  const LIMITS = { imageRefs: 10, video: { image: 9, video: 3, audio: 3, total: 12 } };
+  const LIMITS = { imageRefs: 10 };
   const MAX_BYTES = { image: 20e6, video: 50e6, audio: 20e6 };
   const MAX_SIDE = 2048; // reference images are scaled down to this to keep requests small
 
   const ROLE_NAMES = { ref: "Ref", first: "Start", last: "End" };
   const KIND_NAMES = { image: "image", video: "video", audio: "audio" };
+  const kindWord = (kind, n) => KIND_NAMES[kind] + (n === 1 || kind === "audio" ? "" : "s");
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -425,6 +442,7 @@
     imageAspect: "1:1",
     count: 1,            // images per model
     quality: "auto", resolution: "auto", format: "auto", background: "auto",
+    videoModel: VIDEO_MODELS[0].id,
     videoAspect: "Auto",
     videoRes: "480p",
     duration: 5,         // seconds
@@ -454,6 +472,60 @@
     el.className = "status" + (kind ? " " + kind : "");
   }
 
+  // ---------- video model capabilities ----------
+  // live: Map of OpenRouter video models by id, or null until loaded / if the lookup failed.
+  let live = null;
+
+  function liveEntry(m) {
+    if (!live) return null;
+    return live.get(m.id) || (m.match ? [...live.values()].find(m.match) : null) || null;
+  }
+  // Available unless the live list loaded and doesn't have it.
+  const available = (m) => !live || !!liveEntry(m);
+
+  // A model's capabilities: live values when known, fallbacks otherwise.
+  function capsFor(m) {
+    const l = liveEntry(m);
+    if (!l) return m.caps;
+    const pick = (arr, fb) => (Array.isArray(arr) && arr.length ? arr.map(String) : fb);
+    return {
+      durations: (l.supported_durations?.length ? l.supported_durations.map(Number) : m.caps.durations).sort((a, b) => a - b),
+      resolutions: pick(l.supported_resolutions, m.caps.resolutions),
+      aspects: pick(l.supported_aspect_ratios, m.caps.aspects),
+      frames: pick(l.supported_frame_images, m.caps.frames),
+      audio: l.generate_audio ?? m.caps.audio,
+      seed: l.seed ?? m.caps.seed,
+    };
+  }
+  // The selected video model, with the id OpenRouter actually uses and its capabilities.
+  function vm() {
+    const m = VIDEO_MODELS.find((x) => x.id === state.videoModel) || VIDEO_MODELS[0];
+    return { ...m, apiId: liveEntry(m)?.id || m.id, caps: capsFor(m) };
+  }
+
+  // Snap duration/resolution/aspect to values the current model supports.
+  function fitVideoSettings() {
+    const { caps } = vm();
+    if (!caps.durations.includes(state.duration)) {
+      state.duration = caps.durations.reduce((best, d) => Math.abs(d - state.duration) < Math.abs(best - state.duration) ? d : best, caps.durations[0]);
+    }
+    if (!caps.resolutions.includes(state.videoRes)) state.videoRes = caps.resolutions[0];
+    if (state.videoAspect !== "Auto" && !caps.aspects.includes(state.videoAspect)) state.videoAspect = "Auto";
+  }
+
+  async function loadVideoModels() {
+    try {
+      const res = await fetch(API + "/videos/models", apiKey ? { headers: { Authorization: "Bearer " + apiKey } } : {});
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data?.data)) return;
+      live = new Map(data.data.map((m) => [m.id, m]));
+      if (!available(vm())) state.videoModel = (VIDEO_MODELS.find(available) || VIDEO_MODELS[0]).id;
+      fitVideoSettings();
+      render();
+    } catch { /* offline or blocked: keep using the built-in fallbacks */ }
+  }
+
   // ---------- render controls ----------
   const refs = () => state.refs[state.mode];
 
@@ -462,16 +534,18 @@
     document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.mode === state.mode));
 
     const picked = IMAGE_MODELS.filter((m) => state.imageModels.includes(m.id));
-    const first = img ? (picked[0] || IMAGE_MODELS[0]) : VIDEO_MODEL;
+    const v = vm();
+    const first = img ? (picked[0] || IMAGE_MODELS[0]) : v;
     $("modelMark").textContent = first.mark;
     $("modelLabel").textContent = img && picked.length > 1 ? `${first.name} +${picked.length - 1}` : first.name;
     $("heroModel").textContent = img && picked.length > 1 ? `${picked.length} image models` : first.name;
     $("heroSub").textContent = img
       ? "Describe a scene, character, mood, or style — and watch it come to life"
-      : "Describe a shot, motion, and sound — HeyGen turns it into a short clip with audio";
+      : `Describe a shot, motion, and sound — ${v.name} turns it into a clip`;
     $("heroTips").innerHTML = (img
       ? ["Drop or paste images to use as references", "Hover a result to remix or animate it"]
-      : ["Add a start and end frame", "Up to 9 images, 3 videos and 3 audio references", "Drop or paste files anywhere"]
+      : [v.caps.frames.includes("last_frame") ? "Add a start and end frame" : "Add a start frame",
+         refSummary(v.refs), "Drop or paste files anywhere"]
     ).map((t) => `<span>${t}</span>`).join("");
 
     $("aspectLabel").textContent = img ? state.imageAspect : state.videoAspect;
@@ -482,7 +556,7 @@
 
     const changed = img
       ? ["quality", "resolution", "format", "background"].filter((k) => state[k] !== "auto").length + (state.seed ? 1 : 0)
-      : (state.audio ? 0 : 1) + (state.seed ? 1 : 0);
+      : (state.audio || !v.caps.audio ? 0 : 1) + (state.seed && v.caps.seed ? 1 : 0);
     $("settingsLabel").textContent = changed ? `Settings · ${changed}` : "Settings";
     $("settingsChip").classList.toggle("on", !!changed);
 
@@ -492,9 +566,10 @@
       $("stepUp").disabled = state.count >= 4;
       $("genCount").textContent = state.count * Math.max(1, picked.length);
     } else {
+      const ds = v.caps.durations;
       $("stepVal").innerHTML = `${state.duration}<small>s</small>`;
-      $("stepDown").disabled = state.duration <= 5;
-      $("stepUp").disabled = state.duration >= 15;
+      $("stepDown").disabled = state.duration <= ds[0];
+      $("stepUp").disabled = state.duration >= ds[ds.length - 1];
       $("genCount").textContent = 1;
     }
     $("stepper").title = img ? "Images per model" : "Video length";
@@ -531,8 +606,8 @@
     const role = e.target.closest(".role.cycle");
     if (role) {
       const r = refs().find((x) => x.id === +role.dataset.id);
-      const order = ["ref", "first", "last"];
-      setRole(r, order[(order.indexOf(r.role) + 1) % 3]);
+      const order = ["ref", ...vm().caps.frames.map((f) => (f === "first_frame" ? "first" : "last"))];
+      setRole(r, order[(order.indexOf(r.role) + 1) % order.length]);
       render();
       return;
     }
@@ -546,8 +621,14 @@
   }
 
   document.querySelectorAll(".nav-link").forEach((b) => b.onclick = () => { state.mode = b.dataset.mode; closeMenu(); render(); });
-  $("stepDown").onclick = () => { state.mode === "image" ? state.count-- : state.duration--; render(); };
-  $("stepUp").onclick = () => { state.mode === "image" ? state.count++ : state.duration++; render(); };
+  // Video lengths step through the model's supported durations (which may be uneven, e.g. 4, 6, 8).
+  function stepDuration(dir) {
+    const ds = vm().caps.durations;
+    const next = dir > 0 ? ds.find((d) => d > state.duration) : [...ds].reverse().find((d) => d < state.duration);
+    if (next !== undefined) state.duration = next;
+  }
+  $("stepDown").onclick = () => { state.mode === "image" ? state.count-- : stepDuration(-1); render(); };
+  $("stepUp").onclick = () => { state.mode === "image" ? state.count++ : stepDuration(1); render(); };
   $("autoChip").onclick = () => { state.autoEnhance = !state.autoEnhance; render(); };
 
   // ---------- popover menus ----------
@@ -591,8 +672,19 @@
 
   $("modelChip").onclick = () => {
     if (state.mode === "video") {
-      showMenu($("modelChip"), () => `<h4>Video model</h4>` +
-        optRow("v", VIDEO_MODEL.name, `${VIDEO_MODEL.id} · 5–15s with audio`, true, `<span class="model-mark">H</span>`), () => {});
+      showMenu($("modelChip"), () => `<h4>Video model</h4>` + VIDEO_MODELS.map((m) => {
+        const ok = available(m);
+        const ds = capsFor(m).durations;
+        const sub = ok ? `${m.note} · ${ds[0]}–${ds[ds.length - 1]}s` : "Not on OpenRouter yet";
+        return optRow(m.id, m.name, sub, state.videoModel === m.id, `<span class="model-mark">${m.mark}</span>`)
+          .replace("<button ", ok ? "<button " : "<button disabled ");
+      }).join("") + (live ? "" : `<div class="note">Add your API key to load each model's exact options from OpenRouter.</div>`),
+      (id) => {
+        state.videoModel = id;
+        fitVideoSettings();
+        const bad = refProblems();
+        if (bad) status(bad, "warn");
+      });
       return;
     }
     showMenu($("modelChip"), () => `<h4>Image models · pick one or more</h4>` + IMAGE_MODELS.map((x) =>
@@ -612,7 +704,7 @@
   };
   $("aspectChip").onclick = () => {
     const img = state.mode === "image";
-    const list = img ? IMAGE_ASPECTS : VIDEO_ASPECTS;
+    const list = img ? IMAGE_ASPECTS : ["Auto", ...vm().caps.aspects];
     showMenu($("aspectChip"), () => {
       const cur = img ? state.imageAspect : state.videoAspect;
       return `<h4>Aspect ratio</h4><div class="ratios">` + list.map((r) =>
@@ -620,7 +712,9 @@
     }, (v) => { img ? state.imageAspect = v : state.videoAspect = v; });
   };
   $("resChip").onclick = () => {
-    showMenu($("resChip"), () => `<h4>Resolution</h4>` + VIDEO_RES.map((r) => optRow(r.v, r.v, r.note, r.v === state.videoRes)).join(""),
+    const list = vm().caps.resolutions;
+    showMenu($("resChip"), () => `<h4>Resolution</h4>` + list.map((r, i) =>
+      optRow(r, r, i === 0 && list.length > 1 ? "Cheapest" : i === list.length - 1 && list.length > 1 ? "Sharpest" : "", r === state.videoRes)).join(""),
       (v) => { state.videoRes = v; });
   };
 
@@ -630,16 +724,17 @@
 
   $("settingsChip").onclick = () => {
     const img = state.mode === "image";
+    const { caps, name } = vm();
     const el = showMenu($("settingsChip"), () => (img
       ? `<h4>Quality</h4>${seg("quality", ["auto", "low", "medium", "high"], { auto: "Auto", low: "Low", medium: "Medium", high: "High" })}
          <h4>Resolution</h4>${seg("resolution", ["auto", "1K", "2K", "4K"], { auto: "Auto" })}
          <h4>File format</h4>${seg("format", ["auto", "png", "jpeg", "webp"], { auto: "Auto", png: "PNG", jpeg: "JPEG", webp: "WebP" })}
          <h4>Background</h4>${seg("background", ["auto", "transparent", "opaque"], { auto: "Auto", transparent: "Transparent", opaque: "Opaque" })}
          <div class="note">Not every model supports every option; unsupported ones may be ignored or rejected.</div>`
-      : `<h4>Sound</h4>${seg("audio", [true, false], { true: "Generate audio", false: "Silent" })}`)
+      : caps.audio ? `<h4>Sound</h4>${seg("audio", [true, false], { true: "Generate audio", false: "Silent" })}` : "")
       + `<h4>Seed</h4><div class="seed-row"><input id="seedInput" inputmode="numeric" placeholder="Random" value="${esc(state.seed)}">
          <button class="opt" data-v="seed:dice" title="Pick a random seed">🎲</button><button class="opt" data-v="seed:clear">Clear</button></div>
-         <div class="note">Use the same seed and prompt to get similar results again.</div>`,
+         <div class="note">${!img && !caps.seed ? `${name} doesn't support seeds, so this is ignored for video.` : "Use the same seed and prompt to get similar results again."}</div>`,
     (v) => {
       const [key, val] = v.split(":");
       if (key === "seed") state.seed = val === "dice" ? String(Math.floor(Math.random() * 2 ** 31)) : "";
@@ -662,7 +757,10 @@
     const list = refs();
     const n = (k) => list.filter((r) => r.kind === k && r.role === "ref").length;
     const has = (role) => list.some((r) => r.role === role);
-    const L = LIMITS.video;
+    const { refs: L, caps, name } = vm();
+    const kindRow = (kind, icon, label, sub) => L[kind]
+      ? addRow(`upload:${kind}:ref`, icon, label, `${sub} · ${n(kind)}/${L[kind]}`, n(kind) >= L[kind])
+      : addRow(`upload:${kind}:ref`, icon, label, `Not supported by ${name}`, true);
     showMenu($("addBtn"), () => img
       ? `<h4>Reference images</h4>
          <div class="note">Guide the look, subject or style. Each selected model gets all of them.</div>
@@ -670,15 +768,19 @@
          ${addRow("url", ICON.link, "Add from link", "Public image URL")}
          ${addRow("paste", ICON.clip, "Paste from clipboard", "Or press Ctrl/⌘+V anywhere")}`
       : `<h4>Frames</h4>
-         ${addRow("upload:image:first", ICON.first, "Start frame", has("first") ? "Replace the current start frame" : "The clip opens on this image")}
-         ${addRow("upload:image:last", ICON.last, "End frame", has("last") ? "Replace the current end frame" : "The clip ends on this image")}
-         <h4>References</h4>
-         ${addRow("upload:image:ref", ICON.image, "Reference images", `People, products or places to keep · ${n("image")}/${L.image}`, n("image") >= L.image)}
-         ${addRow("upload:video:ref", ICON.video, "Reference videos", `Motion or scene to follow · ${n("video")}/${L.video}`, n("video") >= L.video)}
-         ${addRow("upload:audio:ref", ICON.audio, "Reference audio", `Voice, music or sound · ${n("audio")}/${L.audio}`, n("audio") >= L.audio)}
+         ${caps.frames.includes("first_frame")
+           ? addRow("upload:image:first", ICON.first, "Start frame", has("first") ? "Replace the current start frame" : "The clip opens on this image")
+           : addRow("upload:image:first", ICON.first, "Start frame", `Not supported by ${name}`, true)}
+         ${caps.frames.includes("last_frame")
+           ? addRow("upload:image:last", ICON.last, "End frame", has("last") ? "Replace the current end frame" : "The clip ends on this image")
+           : addRow("upload:image:last", ICON.last, "End frame", `Not supported by ${name}`, true)}
+         <h4>References · ${name}</h4>
+         ${kindRow("image", ICON.image, "Reference images", "People, products or places to keep")}
+         ${kindRow("video", ICON.video, "Reference videos", "Motion or scene to follow")}
+         ${kindRow("audio", ICON.audio, "Reference audio", "Voice, music or sound")}
          ${addRow("url", ICON.link, "Add from link", "Public image, video or audio URL")}
          ${addRow("paste", ICON.clip, "Paste from clipboard", "Or press Ctrl/⌘+V anywhere")}
-         <div class="note">With a start or end frame set, HeyGen makes an image-to-video clip and may ignore the other references.</div>`,
+         <div class="note">With a start or end frame set, the model makes an image-to-video clip and may ignore the other references.</div>`,
     (v) => {
       const [act, kind, role] = v.split(":");
       if (act === "url") return openUrlModal();
@@ -707,11 +809,36 @@
       if (kind !== "image") return "Image mode only takes reference images.";
       return list.length >= LIMITS.imageRefs ? `You can add up to ${LIMITS.imageRefs} reference images.` : null;
     }
-    if (role !== "ref") return kind === "image" ? null : "Start and end frames must be images.";
-    const L = LIMITS.video;
+    const { refs: L, caps, name } = vm();
+    if (role !== "ref") {
+      if (kind !== "image") return "Start and end frames must be images.";
+      return caps.frames.includes(role === "first" ? "first_frame" : "last_frame") ? null : `${name} doesn't support ${role === "first" ? "a start" : "an end"} frame.`;
+    }
     const plain = list.filter((r) => r.role === "ref");
-    if (plain.length >= L.total) return `HeyGen takes up to ${L.total} references in total.`;
-    if (plain.filter((r) => r.kind === kind).length >= L[kind]) return `HeyGen takes up to ${L[kind]} reference ${KIND_NAMES[kind]}${L[kind] > 1 ? "s" : ""}.`;
+    if (!L[kind]) return `${name} doesn't take reference ${KIND_NAMES[kind]}.`;
+    if (plain.length >= L.total) return `${name} takes up to ${L.total} references in total.`;
+    if (plain.filter((r) => r.kind === kind).length >= L[kind]) return `${name} takes up to ${L[kind]} reference ${kindWord(kind, L[kind])}.`;
+    return null;
+  }
+
+  const refSummary = (L) => {
+    const parts = [["image", "image"], ["video", "video"], ["audio", "audio"]]
+      .filter(([k]) => L[k]).map(([k, word]) => `${L[k]} ${word}${L[k] > 1 && k !== "audio" ? "s" : ""}`);
+    return `Up to ${parts.join(", ").replace(/, ([^,]*)$/, " and $1")} as references`;
+  };
+
+  // Video references that the current model can't take (e.g. after switching models), or null.
+  function refProblems() {
+    const { refs: L, caps, name } = vm();
+    const list = state.refs.video;
+    if (list.some((r) => r.role === "first") && !caps.frames.includes("first_frame")) return `${name} doesn't support a start frame. Remove it or pick another model.`;
+    if (list.some((r) => r.role === "last") && !caps.frames.includes("last_frame")) return `${name} doesn't support an end frame. Remove it or pick another model.`;
+    const plain = list.filter((r) => r.role === "ref");
+    for (const k of ["image", "video", "audio"]) {
+      const c = plain.filter((r) => r.kind === k).length;
+      if (c > (L[k] || 0)) return `${name} takes ${L[k] ? `up to ${L[k]}` : "no"} reference ${kindWord(k, L[k])}; you have ${c}.`;
+    }
+    if (plain.length > L.total) return `${name} takes up to ${L.total} references in total; you have ${plain.length}.`;
     return null;
   }
 
@@ -861,6 +988,7 @@
     $("keyModal").classList.add("hidden");
     status(apiKey ? "API key saved." : "API key cleared.", apiKey ? "ok" : "");
     render();
+    if (apiKey) loadVideoModels();
   };
   $("apiKey").addEventListener("keydown", (e) => { if (e.key === "Enter") $("keySave").click(); });
 
@@ -1041,11 +1169,16 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function generateVideo(text) {
-    const body = { model: VIDEO_MODEL.id, duration: state.duration, resolution: state.videoRes };
+    const model = vm();
+    if (!available(model)) throw new Error(`${model.name} isn't available on OpenRouter yet. Pick another video model.`);
+    const problem = refProblems();
+    if (problem) throw new Error(problem);
+    fitVideoSettings();
+    const body = { model: model.apiId, duration: state.duration, resolution: state.videoRes };
     if (text) body.prompt = text;
     if (state.videoAspect !== "Auto") body.aspect_ratio = state.videoAspect;
-    if (!state.audio) body.generate_audio = false;
-    if (seedValue() !== undefined) body.seed = seedValue();
+    if (!state.audio && model.caps.audio) body.generate_audio = false;
+    if (seedValue() !== undefined && model.caps.seed) body.seed = seedValue();
 
     const list = refs();
     const frames = ["first", "last"].map((role) => list.find((r) => r.role === role)).filter(Boolean);
@@ -1057,12 +1190,12 @@
       body.input_references = others.map((r) => ({ type: `${r.kind}_url`, [`${r.kind}_url`]: { url: r.url } }));
     }
 
-    const card = addCard(VIDEO_MODEL.name, true, state.videoAspect);
+    const card = addCard(model.name, true, state.videoAspect);
     const msg = (t) => { const el = card.querySelector(".msg"); if (el) el.textContent = t; };
     try {
       status(frames.length && others.length
-        ? "Submitting… (with frames set, HeyGen may ignore the other references)"
-        : "Submitting to HeyGen Video 1…", frames.length && others.length ? "warn" : "");
+        ? `Submitting… (with frames set, ${model.name} may ignore the other references)`
+        : `Submitting to ${model.name}…`, frames.length && others.length ? "warn" : "");
       const job = await api("/videos", body);
       const pollUrl = job.polling_url || `${API}/videos/${job.id}`;
       const started = Date.now();
@@ -1088,16 +1221,17 @@
       const cost = s.usage?.cost != null ? ` · $${Number(s.usage.cost).toFixed(3)}` : "";
       finishCard(card, {
         kind: "video", src: url, prompt: text,
-        info: `${VIDEO_MODEL.name} · ${body.duration}s · ${body.resolution}${cost}`, filename: `video-${Date.now()}.mp4`,
+        info: `${esc(model.name)} · ${body.duration}s · ${body.resolution}${cost}`, filename: `video-${Date.now()}.mp4`,
       });
       status(`Video done in ${Math.round((Date.now() - started) / 1000)}s.`, "ok");
     } catch (e) {
-      failCard(card, VIDEO_MODEL.name, e.message);
+      failCard(card, model.name, e.message);
       throw e;
     }
   }
 
   render();
+  loadVideoModels();
   if (!apiKey) status("Click “API key” in the top right to add your OpenRouter key.");
 })();
 </script>
