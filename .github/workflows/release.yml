@@ -1,0 +1,50 @@
+name: Release
+
+# Publishes index.html as a GitHub release.
+# Runs when code lands on main (or a v* tag is pushed), or manually from the Actions tab.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag, e.g. v1.0.1"
+        required: true
+        default: "v1.0.0"
+
+permissions:
+  contents: write
+
+env:
+  # Bump this when you want the next merge to main to publish a new release.
+  DEFAULT_VERSION: v1.0.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="$GITHUB_REF_NAME"
+          else
+            VERSION="${{ inputs.version || env.DEFAULT_VERSION }}"
+          fi
+
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists; skipping."
+            exit 0
+          fi
+
+          gh release create "$VERSION" index.html \
+            --target "$GITHUB_SHA" \
+            --title "OpenRouter Studio $VERSION" \
+            --notes "Single-file OpenRouter image and video generator. Download \`index.html\`, open it in a browser, and paste your OpenRouter API key.
+
+          - Prompt enhancing with Nemotron 3 Ultra (free)
+          - Images: GPT Image 2, FLUX.2 Klein 4B, Riverflow v2.5 Fast
+          - Video: HeyGen Video 1 (5-15s, 480p/768p, optional start frame)"
