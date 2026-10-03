@@ -11,14 +11,14 @@ on:
       version:
         description: "Release tag, e.g. v1.0.1"
         required: true
-        default: "v1.0.0"
+        default: "v1.1.0"
 
 permissions:
   contents: write
 
 env:
   # Bump this when you want the next merge to main to publish a new release.
-  DEFAULT_VERSION: v1.0.0
+  DEFAULT_VERSION: v1.1.0
 
 jobs:
   release:
@@ -47,4 +47,7 @@ jobs:
 
           - Prompt enhancing with Nemotron 3 Ultra (free)
           - Images: GPT Image 2, FLUX.2 Klein 4B, Riverflow v2.5 Fast
-          - Video: HeyGen Video 1 (5-15s, 480p/768p, optional start frame)"
+          - Video: HeyGen Video 1, Wan 3.0, Seedance 2.5 and Gemini Omni Flash 1.1 (when OpenRouter offers it), with each model's lengths, resolutions and aspect ratios loaded live from OpenRouter
+          - Reference images for image models; start/end frames plus reference images, videos and audio for video
+          - Drag and drop, paste, or add references by link; reuse results as references or animate them
+          - Quality, resolution, format, background, seed and audio settings"

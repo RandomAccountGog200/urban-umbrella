@@ -11,7 +11,7 @@
   :root {
     --bg: #0c0d0f; --bg-2: #141518; --panel: #1b1c20; --panel-2: #222328;
     --line: #2c2d33; --line-2: #3a3b42; --text: #f2f3f5; --muted: #8b8d96; --dim: #5e6068;
-    --lime: #d4fb1e; --lime-ink: #101204; --error: #ff6b6b;
+    --lime: #d4fb1e; --lime-ink: #101204; --error: #ff6b6b; --warn: #ffc857;
     --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --display: "Archivo", "Inter", system-ui, sans-serif;
   }
@@ -47,14 +47,10 @@
   .pill:hover { background: var(--line); }
   .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--error); }
   .pill .dot.on { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
-  .badge {
-    font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
-    background: #2f3a05; color: var(--lime); text-transform: uppercase; letter-spacing: .03em;
-  }
 
   /* ---------- hero ---------- */
-  main { padding: 0 16px 230px; max-width: 1400px; margin: 0 auto; }
-  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 9vh; }
+  main { padding: 0 16px 300px; max-width: 1400px; margin: 0 auto; }
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 7vh; }
   .collage { position: relative; height: 150px; width: 440px; max-width: 100%; margin-bottom: 28px; }
   .tile {
     position: absolute; top: 10px; width: 118px; height: 118px; border-radius: 16px;
@@ -73,6 +69,8 @@
   }
   .hero h1 span { color: var(--lime); display: block; }
   .hero p { color: var(--muted); font-size: 16px; margin: 14px 0 0; }
+  .hero .tips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 18px; }
+  .hero .tips span { font-size: 12.5px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
 
   /* ---------- gallery ---------- */
   .gallery-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 12px; }
@@ -86,17 +84,20 @@
   }
   .card img, .card video { display: block; width: 100%; height: auto; }
   .card .overlay {
-    position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 10px 10px;
-    display: flex; justify-content: space-between; align-items: flex-end; gap: 8px;
-    background: linear-gradient(transparent, rgba(0,0,0,.8)); opacity: 0; transition: opacity .15s;
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 36px 10px 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    background: linear-gradient(transparent, rgba(0,0,0,.85)); opacity: 0; transition: opacity .15s;
     font-size: 12px; color: #d9dbe0;
   }
   .card:hover .overlay, .card:focus-within .overlay { opacity: 1; }
   .card.is-video .overlay { position: static; opacity: 1; background: var(--panel); padding: 10px; }
-  .dl {
-    flex: 0 0 auto; background: var(--lime); color: var(--lime-ink); text-decoration: none;
-    font-weight: 700; padding: 5px 10px; border-radius: 8px;
+  .card .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .act {
+    border: 1px solid rgba(255,255,255,.18); background: rgba(20,21,24,.75); color: var(--text);
+    border-radius: 8px; padding: 4px 9px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none;
   }
+  .act:hover { background: rgba(60,62,70,.9); }
+  .act.dl { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); margin-left: auto; }
   .card .pending {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
     color: var(--muted); font-size: 13px; padding: 16px; text-align: center;
@@ -121,30 +122,59 @@
   .composer-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .status { font-size: 12.5px; color: var(--muted); min-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .status.error { color: var(--error); }
+  .status.warn { color: var(--warn); }
   .status.ok { color: var(--lime); }
   textarea#prompt {
     width: 100%; resize: none; border: 0; outline: 0; background: transparent; color: var(--text);
     font: 15px/1.45 var(--font); padding: 2px 0; min-height: 24px; max-height: 160px;
   }
   textarea#prompt::placeholder { color: var(--muted); }
+
+  /* reference tray */
+  .tray { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: thin; }
+  .ref {
+    position: relative; flex: 0 0 auto; width: 64px; height: 64px; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--line-2); background: var(--bg-2);
+  }
+  .ref img, .ref video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ref .audio { width: 100%; height: 100%; display: grid; place-items: center; color: var(--lime); }
+  .ref .audio svg { width: 26px; height: 26px; }
+  .ref .role {
+    position: absolute; left: 3px; bottom: 3px; right: 3px; border: 0; border-radius: 6px;
+    background: rgba(0,0,0,.72); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 4px;
+    text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default;
+  }
+  .ref .role.cycle { cursor: pointer; }
+  .ref .role.cycle:hover { background: rgba(0,0,0,.9); }
+  .ref .role.is-first, .ref .role.is-last { background: var(--lime); color: var(--lime-ink); }
+  .ref .rm {
+    position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; border: 0;
+    background: rgba(0,0,0,.72); color: #fff; font-size: 11px; line-height: 20px; cursor: pointer; padding: 0;
+  }
+  .ref .rm:hover { background: var(--error); }
+  .ref-add {
+    flex: 0 0 auto; width: 64px; height: 64px; border-radius: 10px; border: 1.5px dashed var(--line-2);
+    background: none; color: var(--muted); cursor: pointer; font-size: 22px;
+  }
+  .ref-add:hover { color: var(--lime); border-color: var(--lime); }
+
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip-group { display: inline-flex; align-items: center; border: 1px solid var(--line-2); border-radius: 11px; background: rgba(255,255,255,.02); }
-  .chip-group > * + * { border-left: 1px solid var(--line-2); }
   .chip {
     display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 13px;
     border: 1px solid var(--line-2); border-radius: 11px; background: rgba(255,255,255,.02);
     font-weight: 600; font-size: 13.5px; cursor: pointer; white-space: nowrap; position: relative;
   }
-  .chip-group .chip { border: 0; border-radius: 0; background: none; }
   .chip:hover { background: rgba(255,255,255,.06); }
+  .chip:disabled { opacity: .5; cursor: not-allowed; }
   .chip svg { width: 15px; height: 15px; flex: 0 0 auto; }
-  .chip .muted { color: var(--muted); font-weight: 500; }
   .chip.on { border-color: #5a6b10; color: var(--lime); background: rgba(212,251,30,.07); }
-  .chip.thumb img { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; }
-  .chip .x { color: var(--muted); margin-left: 2px; }
+  .chip .count {
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--lime); color: var(--lime-ink);
+    font-size: 11px; font-weight: 800; display: inline-grid; place-items: center;
+  }
   .model-mark {
     width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
-    background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 11px;
+    background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 11px; flex: 0 0 auto;
   }
   .stepper { display: inline-flex; align-items: center; height: 38px; border: 1px solid var(--line-2); border-radius: 11px; }
   .stepper button { width: 34px; height: 100%; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; }
@@ -164,24 +194,41 @@
 
   /* ---------- menus & modal ---------- */
   .menu {
-    position: fixed; z-index: 50; min-width: 220px; max-width: calc(100vw - 32px); padding: 6px;
-    background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px;
+    position: fixed; z-index: 50; min-width: 240px; max-width: calc(100vw - 32px); max-height: calc(100vh - 80px);
+    overflow-y: auto; padding: 6px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px;
     box-shadow: 0 18px 50px rgba(0,0,0,.6);
   }
-  .menu h4 { margin: 6px 10px 6px; font-size: 11px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+  .menu h4 { margin: 8px 10px 6px; font-size: 11px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+  .menu .note { margin: 2px 10px 8px; font-size: 12px; color: var(--muted); max-width: 300px; }
   .opt {
     display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px;
     background: none; cursor: pointer; text-align: left; font-size: 13.5px;
   }
   .opt:hover { background: var(--panel-2); }
+  .opt:disabled { opacity: .4; cursor: not-allowed; }
   .opt .grow { flex: 1; min-width: 0; }
   .opt small { display: block; color: var(--muted); font-size: 12px; }
+  .opt .ico { width: 20px; display: grid; place-items: center; color: var(--muted); flex: 0 0 auto; }
+  .opt .ico svg { width: 17px; height: 17px; }
   .opt .tick { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--line-2); display: grid; place-items: center; flex: 0 0 auto; }
   .opt.sel .tick { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
   .opt .tick svg { width: 12px; height: 12px; opacity: 0; }
   .opt.sel .tick svg { opacity: 1; }
   .opt .ratio { width: 18px; display: grid; place-items: center; }
   .opt .ratio i { display: block; border: 1.5px solid currentColor; border-radius: 3px; }
+  .ratios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 4px 4px; }
+  .ratios .opt { flex-direction: column; gap: 4px; padding: 8px 4px; font-size: 12px; justify-content: center; text-align: center; }
+  .ratios .opt.sel { background: rgba(212,251,30,.1); color: var(--lime); }
+  .seg { display: flex; gap: 4px; padding: 0 6px 6px; flex-wrap: wrap; }
+  .seg .opt { width: auto; flex: 1 0 auto; justify-content: center; padding: 7px 10px; border: 1px solid var(--line-2); font-size: 12.5px; }
+  .seg .opt.sel { background: rgba(212,251,30,.1); border-color: #5a6b10; color: var(--lime); }
+  .seed-row { display: flex; gap: 6px; padding: 0 6px 8px; }
+  .seed-row input {
+    flex: 1; min-width: 0; height: 34px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line-2);
+    background: var(--bg-2); color: var(--text); font: 13px var(--font);
+  }
+  .seed-row input:focus { outline: 2px solid var(--lime); outline-offset: -1px; }
+  .seed-row .opt { width: auto; border: 1px solid var(--line-2); padding: 0 10px; font-size: 12.5px; }
 
   .backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 16px; }
   .modal {
@@ -190,16 +237,27 @@
   }
   .modal h3 { margin: 0 0 4px; font-size: 18px; }
   .modal p { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
-  .modal input[type=password], .modal input[type=text] {
+  .modal input[type=password], .modal input[type=url], .modal select {
     width: 100%; height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2);
     background: var(--bg-2); color: var(--text); font: 14px var(--font);
   }
-  .modal input:focus { outline: 2px solid var(--lime); outline-offset: -1px; }
+  .modal select { margin-top: 10px; }
+  .modal input:focus, .modal select:focus { outline: 2px solid var(--lime); outline-offset: -1px; }
   .modal label.row { display: flex; gap: 8px; align-items: center; margin-top: 12px; color: var(--muted); font-size: 13px; cursor: pointer; }
   .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
   .btn { height: 38px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line-2); background: none; cursor: pointer; font-weight: 600; }
   .btn.primary { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); }
   .modal a { color: var(--lime); }
+
+  .dropzone {
+    position: fixed; inset: 0; z-index: 70; background: rgba(12,13,15,.82); display: grid; place-items: center;
+    pointer-events: none;
+  }
+  .dropzone div {
+    border: 2px dashed var(--lime); border-radius: 24px; padding: 48px 64px; text-align: center;
+    color: var(--lime); font-family: var(--display); font-size: 26px; text-transform: uppercase;
+  }
+  .dropzone small { display: block; font-family: var(--font); font-size: 14px; color: var(--muted); text-transform: none; margin-top: 8px; }
 
   /* ---------- small screens ---------- */
   @media (max-width: 720px) {
@@ -208,9 +266,10 @@
     .composer { flex-direction: column; padding: 12px; border-radius: 18px; }
     .generate { flex: 0 0 52px; flex-direction: row; gap: 10px; }
     .composer-wrap { bottom: 8px; padding: 0 8px; }
-    main { padding-bottom: 300px; }
+    main { padding-bottom: 380px; }
     .collage { transform: scale(.8); }
-    .hero { padding-top: 5vh; }
+    .hero { padding-top: 4vh; }
+    .chip { padding: 0 10px; }
   }
 </style>
 </head>
@@ -236,6 +295,7 @@
     </div>
     <h1>Start creating with <span id="heroModel">GPT Image 2</span></h1>
     <p id="heroSub">Describe a scene, character, mood, or style — and watch it come to life</p>
+    <div class="tips" id="heroTips"></div>
   </section>
 
   <section id="gallerySection" class="hidden">
@@ -251,18 +311,17 @@
   <div class="composer">
     <div class="composer-main">
       <div class="status" id="status"></div>
+      <div class="tray hidden" id="tray"></div>
       <textarea id="prompt" rows="1" placeholder="Describe the scene you imagine"></textarea>
       <div class="chips">
-        <div class="chip-group">
-          <button class="chip" id="attachBtn" title="Add a start frame (video)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-          <button class="chip" id="enhanceBtn" title="Enhance prompt with Nemotron 3 Ultra (free)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>
-            Enhance
-          </button>
-        </div>
-        <button class="chip hidden thumb" id="frameChip" title="Remove start frame"><img id="frameThumb" alt=""><span>Start frame</span><span class="x">✕</span></button>
+        <button class="chip" id="addBtn" title="Add reference images, frames, video or audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span id="addLabel">Reference</span><span class="count hidden" id="refCount">0</span>
+        </button>
+        <button class="chip" id="enhanceBtn" title="Enhance prompt with Nemotron 3 Ultra (free)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>
+          Enhance
+        </button>
         <button class="chip" id="autoChip" title="Enhance every prompt automatically before generating">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg>
           Auto-enhance
@@ -278,6 +337,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
           <span id="resLabel">480p</span>
         </button>
+        <button class="chip" id="settingsChip" title="More settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+          <span id="settingsLabel">Settings</span>
+        </button>
         <div class="stepper" id="stepper">
           <button id="stepDown" aria-label="Decrease">−</button>
           <span class="val" id="stepVal">1<small>/4</small></span>
@@ -291,7 +354,7 @@
   </div>
 </div>
 
-<input type="file" id="frameInput" accept="image/*" class="hidden">
+<input type="file" id="fileInput" class="hidden" multiple>
 
 <div class="backdrop hidden" id="keyModal">
   <div class="modal" role="dialog" aria-labelledby="keyTitle">
@@ -306,36 +369,91 @@
   </div>
 </div>
 
+<div class="backdrop hidden" id="urlModal">
+  <div class="modal" role="dialog" aria-labelledby="urlTitle">
+    <h3 id="urlTitle">Add from link</h3>
+    <p>Paste a public https link to an image, video or audio file. Links keep requests small, which is handy for long videos.</p>
+    <input id="urlInput" type="url" placeholder="https://example.com/photo.jpg" spellcheck="false">
+    <select id="urlRole"></select>
+    <div class="actions">
+      <button class="btn" id="urlCancel">Cancel</button>
+      <button class="btn primary" id="urlAdd">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="dropzone hidden" id="dropzone"><div>Drop to add references<small id="dropHint"></small></div></div>
+
 <script>
 (() => {
   const API = "https://openrouter.ai/api/v1";
   const ENHANCER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
-  const VIDEO_MODEL = { id: "heygen/heygen-video-1", name: "HeyGen Video 1", mark: "H" };
+  const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  // Video models. `caps` are fallbacks used until OpenRouter's live model list
+  // (GET /videos/models) loads; after that the live values win. `refs` are each
+  // model's documented reference limits. `match` finds the model in the live list
+  // if OpenRouter uses a slightly different id.
+  const VIDEO_MODELS = [
+    { id: "heygen/heygen-video-1", name: "HeyGen Video 1", mark: "H", note: "Clips with dialogue, ambience and effects",
+      caps: { durations: range(5, 15), resolutions: ["480p", "768p"], aspects: [], frames: ["first_frame"], audio: true, seed: false },
+      refs: { image: 9, video: 3, audio: 3, total: 12 } },
+    { id: "alibaba/wan-3.0", name: "Wan 3.0", mark: "W", note: "Up to 30s at 1080p · ~$0.043/s",
+      caps: { durations: range(2, 30), resolutions: ["480p", "720p", "1080p"], aspects: ["16:9", "4:3", "1:1", "3:4", "9:16"], frames: ["first_frame"], audio: true, seed: true },
+      refs: { image: 10, video: 5, audio: 5, total: 20 } },
+    { id: "bytedance/seedance-2.5", name: "Seedance 2.5", mark: "S", note: "Up to 30s, many references · ~$0.10/s",
+      caps: { durations: range(4, 30), resolutions: ["480p", "720p"], aspects: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"], frames: ["first_frame", "last_frame"], audio: true, seed: true },
+      refs: { image: 30, video: 10, audio: 10, total: 50 } },
+    { id: "google/gemini-omni-1.1-flash", name: "Gemini Omni Flash 1.1", mark: "G", note: "Fast video from text, images or video",
+      match: (m) => /gemini[-\s]?omni/i.test(m.id + " " + m.name) && /1\.1/.test(m.id + " " + m.name),
+      caps: { durations: range(3, 10), resolutions: ["720p", "1080p"], aspects: ["16:9", "9:16"], frames: ["first_frame"], audio: true, seed: false },
+      refs: { image: 3, video: 1, audio: 0, total: 4 } },
+  ];
   const IMAGE_MODELS = [
     { id: "openai/gpt-image-2", name: "GPT Image 2", note: "~$0.006 / image", mark: "G" },
     { id: "black-forest-labs/flux.2-klein-4b", name: "FLUX.2 Klein 4B", note: "~$0.014 / image", mark: "F" },
     { id: "sourceful/riverflow-v2.5-fast", name: "Riverflow v2.5 Fast", note: "~$0.018 / image", mark: "R" },
   ];
-  const IMAGE_ASPECTS = ["1:1", "3:4", "4:3", "9:16", "16:9"];
-  const VIDEO_ASPECTS = ["Auto", "16:9", "9:16", "1:1"];
-  const VIDEO_RES = [{ v: "480p", note: "Cheaper" }, { v: "768p", note: "Sharper" }];
+  const IMAGE_ASPECTS = ["Auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "9:21"];
+
+  const LIMITS = { imageRefs: 10 };
+  const MAX_BYTES = { image: 20e6, video: 50e6, audio: 20e6 };
+  const MAX_SIDE = 2048; // reference images are scaled down to this to keep requests small
+
+  const ROLE_NAMES = { ref: "Ref", first: "Start", last: "End" };
+  const KIND_NAMES = { image: "image", video: "video", audio: "audio" };
+  const kindWord = (kind, n) => KIND_NAMES[kind] + (n === 1 || kind === "audio" ? "" : "s");
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
+  const ICON = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>',
+    first: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="7" y="4" width="14" height="16" rx="2.5"/><path d="M3 8v8"/><path d="m11 10 4 2-4 2z" fill="currentColor"/></svg>',
+    last: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="14" height="16" rx="2.5"/><path d="M21 8v8"/><path d="m8 10 4 2-4 2z" fill="currentColor"/></svg>',
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10 5-3v10l-5-3z"/></svg>',
+    audio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+    clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg>',
+  };
 
   const state = {
     mode: "image",
     imageModels: [IMAGE_MODELS[0].id],
     imageAspect: "1:1",
-    count: 1,          // images per model
+    count: 1,            // images per model
+    quality: "auto", resolution: "auto", format: "auto", background: "auto",
+    videoModel: VIDEO_MODELS[0].id,
     videoAspect: "Auto",
     videoRes: "480p",
-    duration: 5,       // seconds
+    duration: 5,         // seconds
+    audio: true,
+    seed: "",            // shared by both modes; blank = random
     autoEnhance: false,
-    frame: null,       // { name, dataUrl }
+    refs: { image: [], video: [] }, // { id, kind: image|video|audio, role: ref|first|last, url, name }
     busy: false,
   };
+  let nextRefId = 1;
+  const cardData = new WeakMap();
 
   // ---------- storage (best effort) ----------
   const store = {
@@ -354,27 +472,93 @@
     el.className = "status" + (kind ? " " + kind : "");
   }
 
+  // ---------- video model capabilities ----------
+  // live: Map of OpenRouter video models by id, or null until loaded / if the lookup failed.
+  let live = null;
+
+  function liveEntry(m) {
+    if (!live) return null;
+    return live.get(m.id) || (m.match ? [...live.values()].find(m.match) : null) || null;
+  }
+  // Available unless the live list loaded and doesn't have it.
+  const available = (m) => !live || !!liveEntry(m);
+
+  // A model's capabilities: live values when known, fallbacks otherwise.
+  function capsFor(m) {
+    const l = liveEntry(m);
+    if (!l) return m.caps;
+    const pick = (arr, fb) => (Array.isArray(arr) && arr.length ? arr.map(String) : fb);
+    return {
+      durations: (l.supported_durations?.length ? l.supported_durations.map(Number) : m.caps.durations).sort((a, b) => a - b),
+      resolutions: pick(l.supported_resolutions, m.caps.resolutions),
+      aspects: pick(l.supported_aspect_ratios, m.caps.aspects),
+      frames: pick(l.supported_frame_images, m.caps.frames),
+      audio: l.generate_audio ?? m.caps.audio,
+      seed: l.seed ?? m.caps.seed,
+    };
+  }
+  // The selected video model, with the id OpenRouter actually uses and its capabilities.
+  function vm() {
+    const m = VIDEO_MODELS.find((x) => x.id === state.videoModel) || VIDEO_MODELS[0];
+    return { ...m, apiId: liveEntry(m)?.id || m.id, caps: capsFor(m) };
+  }
+
+  // Snap duration/resolution/aspect to values the current model supports.
+  function fitVideoSettings() {
+    const { caps } = vm();
+    if (!caps.durations.includes(state.duration)) {
+      state.duration = caps.durations.reduce((best, d) => Math.abs(d - state.duration) < Math.abs(best - state.duration) ? d : best, caps.durations[0]);
+    }
+    if (!caps.resolutions.includes(state.videoRes)) state.videoRes = caps.resolutions[0];
+    if (state.videoAspect !== "Auto" && !caps.aspects.includes(state.videoAspect)) state.videoAspect = "Auto";
+  }
+
+  async function loadVideoModels() {
+    try {
+      const res = await fetch(API + "/videos/models", apiKey ? { headers: { Authorization: "Bearer " + apiKey } } : {});
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data?.data)) return;
+      live = new Map(data.data.map((m) => [m.id, m]));
+      if (!available(vm())) state.videoModel = (VIDEO_MODELS.find(available) || VIDEO_MODELS[0]).id;
+      fitVideoSettings();
+      render();
+    } catch { /* offline or blocked: keep using the built-in fallbacks */ }
+  }
+
   // ---------- render controls ----------
+  const refs = () => state.refs[state.mode];
+
   function render() {
     const img = state.mode === "image";
     document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.mode === state.mode));
 
     const picked = IMAGE_MODELS.filter((m) => state.imageModels.includes(m.id));
-    const first = img ? (picked[0] || IMAGE_MODELS[0]) : VIDEO_MODEL;
+    const v = vm();
+    const first = img ? (picked[0] || IMAGE_MODELS[0]) : v;
     $("modelMark").textContent = first.mark;
     $("modelLabel").textContent = img && picked.length > 1 ? `${first.name} +${picked.length - 1}` : first.name;
     $("heroModel").textContent = img && picked.length > 1 ? `${picked.length} image models` : first.name;
     $("heroSub").textContent = img
       ? "Describe a scene, character, mood, or style — and watch it come to life"
-      : "Describe a shot, motion, and sound — HeyGen turns it into a short clip with audio";
+      : `Describe a shot, motion, and sound — ${v.name} turns it into a clip`;
+    $("heroTips").innerHTML = (img
+      ? ["Drop or paste images to use as references", "Hover a result to remix or animate it"]
+      : [v.caps.frames.includes("last_frame") ? "Add a start and end frame" : "Add a start frame",
+         refSummary(v.refs), "Drop or paste files anywhere"]
+    ).map((t) => `<span>${t}</span>`).join("");
 
     $("aspectLabel").textContent = img ? state.imageAspect : state.videoAspect;
     $("resChip").classList.toggle("hidden", img);
     $("resLabel").textContent = state.videoRes;
-    $("attachBtn").classList.toggle("hidden", img);
-    $("frameChip").classList.toggle("hidden", img || !state.frame);
-    if (state.frame) $("frameThumb").src = state.frame.dataUrl;
     $("autoChip").classList.toggle("on", state.autoEnhance);
+    $("addLabel").textContent = img ? "Reference" : "Frames & refs";
+
+    const changed = img
+      ? ["quality", "resolution", "format", "background"].filter((k) => state[k] !== "auto").length + (state.seed ? 1 : 0)
+      : (state.audio || !v.caps.audio ? 0 : 1) + (state.seed && v.caps.seed ? 1 : 0);
+    $("settingsLabel").textContent = changed ? `Settings · ${changed}` : "Settings";
+    $("settingsChip").classList.toggle("on", !!changed);
 
     if (img) {
       $("stepVal").innerHTML = `${state.count}<small>/4</small>`;
@@ -382,33 +566,82 @@
       $("stepUp").disabled = state.count >= 4;
       $("genCount").textContent = state.count * Math.max(1, picked.length);
     } else {
+      const ds = v.caps.durations;
       $("stepVal").innerHTML = `${state.duration}<small>s</small>`;
-      $("stepDown").disabled = state.duration <= 5;
-      $("stepUp").disabled = state.duration >= 15;
+      $("stepDown").disabled = state.duration <= ds[0];
+      $("stepUp").disabled = state.duration >= ds[ds.length - 1];
       $("genCount").textContent = 1;
     }
     $("stepper").title = img ? "Images per model" : "Video length";
     $("generateBtn").disabled = state.busy;
     $("enhanceBtn").disabled = state.busy;
     $("keyDot").classList.toggle("on", !!apiKey);
+    renderTray();
+  }
+
+  function renderTray() {
+    const list = refs();
+    const n = list.length;
+    $("refCount").textContent = n;
+    $("refCount").classList.toggle("hidden", !n);
+    $("addBtn").classList.toggle("on", !!n);
+    $("tray").classList.toggle("hidden", !n);
+    if (!n) { $("tray").innerHTML = ""; return; }
+    const video = state.mode === "video";
+    $("tray").innerHTML = list.map((r) => {
+      const media = r.kind === "image" ? `<img src="${esc(r.url)}" alt="">`
+        : r.kind === "video" ? `<video src="${esc(r.url)}" muted playsinline preload="metadata"></video>`
+        : `<div class="audio">${ICON.audio}</div>`;
+      const label = r.kind === "image" ? ROLE_NAMES[r.role] : r.kind === "video" ? "Video" : "Audio";
+      const canCycle = video && r.kind === "image";
+      return `<div class="ref" title="${esc(r.name)}">${media}
+        <button class="role is-${r.role} ${canCycle ? "cycle" : ""}" data-id="${r.id}" ${canCycle ? 'title="Click to switch: reference → start frame → end frame"' : "tabindex=-1"}>${label}</button>
+        <button class="rm" data-rm="${r.id}" title="Remove">✕</button></div>`;
+    }).join("") + `<button class="ref-add" id="trayAdd" title="Add more">+</button>`;
+  }
+
+  $("tray").addEventListener("click", (e) => {
+    const rm = e.target.closest("[data-rm]");
+    if (rm) { state.refs[state.mode] = refs().filter((r) => r.id !== +rm.dataset.rm); render(); return; }
+    const role = e.target.closest(".role.cycle");
+    if (role) {
+      const r = refs().find((x) => x.id === +role.dataset.id);
+      const order = ["ref", ...vm().caps.frames.map((f) => (f === "first_frame" ? "first" : "last"))];
+      setRole(r, order[(order.indexOf(r.role) + 1) % order.length]);
+      render();
+      return;
+    }
+    if (e.target.closest("#trayAdd")) $("addBtn").click();
+  });
+
+  // A video can only have one start and one end frame; taking a slot demotes whoever held it.
+  function setRole(ref, role) {
+    if (role !== "ref") state.refs.video.forEach((r) => { if (r !== ref && r.role === role) r.role = "ref"; });
+    ref.role = role;
   }
 
   document.querySelectorAll(".nav-link").forEach((b) => b.onclick = () => { state.mode = b.dataset.mode; closeMenu(); render(); });
-  $("stepDown").onclick = () => { state.mode === "image" ? state.count-- : state.duration--; render(); };
-  $("stepUp").onclick = () => { state.mode === "image" ? state.count++ : state.duration++; render(); };
+  // Video lengths step through the model's supported durations (which may be uneven, e.g. 4, 6, 8).
+  function stepDuration(dir) {
+    const ds = vm().caps.durations;
+    const next = dir > 0 ? ds.find((d) => d > state.duration) : [...ds].reverse().find((d) => d < state.duration);
+    if (next !== undefined) state.duration = next;
+  }
+  $("stepDown").onclick = () => { state.mode === "image" ? state.count-- : stepDuration(-1); render(); };
+  $("stepUp").onclick = () => { state.mode === "image" ? state.count++ : stepDuration(1); render(); };
   $("autoChip").onclick = () => { state.autoEnhance = !state.autoEnhance; render(); };
 
   // ---------- popover menus ----------
   let openMenu = null;
   function closeMenu() { if (openMenu) { openMenu.el.remove(); openMenu = null; } }
-  function showMenu(anchor, build) {
+  function showMenu(anchor, build, onPick) {
     const same = openMenu && openMenu.anchor === anchor;
     closeMenu();
     if (same) return;
     const el = document.createElement("div");
     el.className = "menu";
     document.body.appendChild(el);
-    openMenu = { el, anchor };
+    openMenu = { el, anchor, onPick };
     const draw = () => { el.innerHTML = build(); position(); };
     const position = () => {
       const r = anchor.getBoundingClientRect();
@@ -418,71 +651,327 @@
     };
     el.addEventListener("click", (e) => {
       const opt = e.target.closest(".opt");
-      if (!opt) return;
+      if (!opt || opt.disabled) return;
       e.stopPropagation();
-      if (openMenu.onPick(opt.dataset.v) === "keep") draw(); else closeMenu();
+      if (onPick(opt.dataset.v) === "keep") draw(); else closeMenu();
       render();
     });
     draw();
-    return openMenu;
+    return el;
   }
   document.addEventListener("click", (e) => {
     if (openMenu && !openMenu.el.contains(e.target) && !openMenu.anchor.contains(e.target)) closeMenu();
   });
   addEventListener("resize", closeMenu);
-  addEventListener("keydown", (e) => { if (e.key === "Escape") { closeMenu(); $("keyModal").classList.add("hidden"); } });
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { closeMenu(); $("keyModal").classList.add("hidden"); $("urlModal").classList.add("hidden"); }
+  });
+
+  const optRow = (v, label, sub, sel, icon = "") => `
+    <button class="opt ${sel ? "sel" : ""}" data-v="${esc(v)}">${icon}<span class="grow">${label}${sub ? `<small>${sub}</small>` : ""}</span><span class="tick">${ICON.check}</span></button>`;
 
   $("modelChip").onclick = () => {
     if (state.mode === "video") {
-      const m = showMenu($("modelChip"), () => `<h4>Video model</h4>
-        <button class="opt sel" data-v="v"><span class="model-mark">H</span><span class="grow">${VIDEO_MODEL.name}<small>${VIDEO_MODEL.id} · 5–15s with audio</small></span><span class="tick">${CHECK}</span></button>`);
-      if (m) m.onPick = () => {};
+      showMenu($("modelChip"), () => `<h4>Video model</h4>` + VIDEO_MODELS.map((m) => {
+        const ok = available(m);
+        const ds = capsFor(m).durations;
+        const sub = ok ? `${m.note} · ${ds[0]}–${ds[ds.length - 1]}s` : "Not on OpenRouter yet";
+        return optRow(m.id, m.name, sub, state.videoModel === m.id, `<span class="model-mark">${m.mark}</span>`)
+          .replace("<button ", ok ? "<button " : "<button disabled ");
+      }).join("") + (live ? "" : `<div class="note">Add your API key to load each model's exact options from OpenRouter.</div>`),
+      (id) => {
+        state.videoModel = id;
+        fitVideoSettings();
+        const bad = refProblems();
+        if (bad) status(bad, "warn");
+      });
       return;
     }
-    const m = showMenu($("modelChip"), () => `<h4>Image models · pick one or more</h4>` + IMAGE_MODELS.map((x) => `
-      <button class="opt ${state.imageModels.includes(x.id) ? "sel" : ""}" data-v="${x.id}">
-        <span class="model-mark">${x.mark}</span>
-        <span class="grow">${x.name}<small>${x.id} · ${x.note}</small></span>
-        <span class="tick">${CHECK}</span></button>`).join(""));
-    if (m) m.onPick = (id) => {
+    showMenu($("modelChip"), () => `<h4>Image models · pick one or more</h4>` + IMAGE_MODELS.map((x) =>
+      optRow(x.id, x.name, `${x.id} · ${x.note}`, state.imageModels.includes(x.id), `<span class="model-mark">${x.mark}</span>`)).join(""),
+    (id) => {
       const has = state.imageModels.includes(id);
       if (has && state.imageModels.length === 1) return "keep";
-      state.imageModels = has ? state.imageModels.filter((x) => x !== id) : IMAGE_MODELS.map((x) => x.id).filter((x) => x === id || state.imageModels.includes(x));
+      state.imageModels = IMAGE_MODELS.map((x) => x.id).filter((x) => (x === id ? !has : state.imageModels.includes(x)));
       return "keep";
-    };
+    });
   };
 
   const ratioIcon = (r) => {
     if (r === "Auto") return '<span class="ratio">◎</span>';
-    const [w, h] = r.split(":").map(Number), s = 14 / Math.max(w, h);
+    const [w, h] = r.split(":").map(Number), s = 16 / Math.max(w, h);
     return `<span class="ratio"><i style="width:${w * s}px;height:${h * s}px"></i></span>`;
   };
   $("aspectChip").onclick = () => {
     const img = state.mode === "image";
-    const list = img ? IMAGE_ASPECTS : VIDEO_ASPECTS;
-    const cur = img ? state.imageAspect : state.videoAspect;
-    const m = showMenu($("aspectChip"), () => `<h4>Aspect ratio</h4>` + list.map((r) => `
-      <button class="opt ${r === cur ? "sel" : ""}" data-v="${r}">${ratioIcon(r)}<span class="grow">${r === "Auto" ? "Model default" : r}</span><span class="tick">${CHECK}</span></button>`).join(""));
-    if (m) m.onPick = (v) => { img ? state.imageAspect = v : state.videoAspect = v; };
+    const list = img ? IMAGE_ASPECTS : ["Auto", ...vm().caps.aspects];
+    showMenu($("aspectChip"), () => {
+      const cur = img ? state.imageAspect : state.videoAspect;
+      return `<h4>Aspect ratio</h4><div class="ratios">` + list.map((r) =>
+        `<button class="opt ${r === cur ? "sel" : ""}" data-v="${r}">${ratioIcon(r)}${r}</button>`).join("") + `</div>`;
+    }, (v) => { img ? state.imageAspect = v : state.videoAspect = v; });
   };
   $("resChip").onclick = () => {
-    const m = showMenu($("resChip"), () => `<h4>Resolution</h4>` + VIDEO_RES.map((r) => `
-      <button class="opt ${r.v === state.videoRes ? "sel" : ""}" data-v="${r.v}"><span class="grow">${r.v}<small>${r.note}</small></span><span class="tick">${CHECK}</span></button>`).join(""));
-    if (m) m.onPick = (v) => { state.videoRes = v; };
+    const list = vm().caps.resolutions;
+    showMenu($("resChip"), () => `<h4>Resolution</h4>` + list.map((r, i) =>
+      optRow(r, r, i === 0 && list.length > 1 ? "Cheapest" : i === list.length - 1 && list.length > 1 ? "Sharpest" : "", r === state.videoRes)).join(""),
+      (v) => { state.videoRes = v; });
   };
 
-  // ---------- start frame ----------
-  $("attachBtn").onclick = () => $("frameInput").click();
-  $("frameInput").onchange = () => {
-    const f = $("frameInput").files[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => { state.frame = { name: f.name, dataUrl: r.result }; render(); };
-    r.onerror = () => status("Could not read that image.", "error");
-    r.readAsDataURL(f);
-    $("frameInput").value = "";
+  // ---------- settings ----------
+  const seg = (key, values, labels = {}) => `<div class="seg">` + values.map((v) =>
+    `<button class="opt ${state[key] === v ? "sel" : ""}" data-v="${key}:${v}">${labels[v] || v}</button>`).join("") + `</div>`;
+
+  $("settingsChip").onclick = () => {
+    const img = state.mode === "image";
+    const { caps, name } = vm();
+    const el = showMenu($("settingsChip"), () => (img
+      ? `<h4>Quality</h4>${seg("quality", ["auto", "low", "medium", "high"], { auto: "Auto", low: "Low", medium: "Medium", high: "High" })}
+         <h4>Resolution</h4>${seg("resolution", ["auto", "1K", "2K", "4K"], { auto: "Auto" })}
+         <h4>File format</h4>${seg("format", ["auto", "png", "jpeg", "webp"], { auto: "Auto", png: "PNG", jpeg: "JPEG", webp: "WebP" })}
+         <h4>Background</h4>${seg("background", ["auto", "transparent", "opaque"], { auto: "Auto", transparent: "Transparent", opaque: "Opaque" })}
+         <div class="note">Not every model supports every option; unsupported ones may be ignored or rejected.</div>`
+      : caps.audio ? `<h4>Sound</h4>${seg("audio", [true, false], { true: "Generate audio", false: "Silent" })}` : "")
+      + `<h4>Seed</h4><div class="seed-row"><input id="seedInput" inputmode="numeric" placeholder="Random" value="${esc(state.seed)}">
+         <button class="opt" data-v="seed:dice" title="Pick a random seed">🎲</button><button class="opt" data-v="seed:clear">Clear</button></div>
+         <div class="note">${!img && !caps.seed ? `${name} doesn't support seeds, so this is ignored for video.` : "Use the same seed and prompt to get similar results again."}</div>`,
+    (v) => {
+      const [key, val] = v.split(":");
+      if (key === "seed") state.seed = val === "dice" ? String(Math.floor(Math.random() * 2 ** 31)) : "";
+      else if (key === "audio") state.audio = val === "true";
+      else state[key] = val;
+      return "keep";
+    });
+    if (el) el.addEventListener("input", (e) => {
+      if (e.target.id !== "seedInput") return;
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+      state.seed = e.target.value;
+      render(); // updates the chip label; the menu itself isn't redrawn, so the input keeps focus
+    });
   };
-  $("frameChip").onclick = () => { state.frame = null; render(); };
+
+  // ---------- adding references ----------
+  let pendingRole = "ref";
+  $("addBtn").onclick = () => {
+    const img = state.mode === "image";
+    const list = refs();
+    const n = (k) => list.filter((r) => r.kind === k && r.role === "ref").length;
+    const has = (role) => list.some((r) => r.role === role);
+    const { refs: L, caps, name } = vm();
+    const kindRow = (kind, icon, label, sub) => L[kind]
+      ? addRow(`upload:${kind}:ref`, icon, label, `${sub} · ${n(kind)}/${L[kind]}`, n(kind) >= L[kind])
+      : addRow(`upload:${kind}:ref`, icon, label, `Not supported by ${name}`, true);
+    showMenu($("addBtn"), () => img
+      ? `<h4>Reference images</h4>
+         <div class="note">Guide the look, subject or style. Each selected model gets all of them.</div>
+         ${addRow("upload:image:ref", ICON.image, "Upload images", `${list.length}/${LIMITS.imageRefs} added`, list.length >= LIMITS.imageRefs)}
+         ${addRow("url", ICON.link, "Add from link", "Public image URL")}
+         ${addRow("paste", ICON.clip, "Paste from clipboard", "Or press Ctrl/⌘+V anywhere")}`
+      : `<h4>Frames</h4>
+         ${caps.frames.includes("first_frame")
+           ? addRow("upload:image:first", ICON.first, "Start frame", has("first") ? "Replace the current start frame" : "The clip opens on this image")
+           : addRow("upload:image:first", ICON.first, "Start frame", `Not supported by ${name}`, true)}
+         ${caps.frames.includes("last_frame")
+           ? addRow("upload:image:last", ICON.last, "End frame", has("last") ? "Replace the current end frame" : "The clip ends on this image")
+           : addRow("upload:image:last", ICON.last, "End frame", `Not supported by ${name}`, true)}
+         <h4>References · ${name}</h4>
+         ${kindRow("image", ICON.image, "Reference images", "People, products or places to keep")}
+         ${kindRow("video", ICON.video, "Reference videos", "Motion or scene to follow")}
+         ${kindRow("audio", ICON.audio, "Reference audio", "Voice, music or sound")}
+         ${addRow("url", ICON.link, "Add from link", "Public image, video or audio URL")}
+         ${addRow("paste", ICON.clip, "Paste from clipboard", "Or press Ctrl/⌘+V anywhere")}
+         <div class="note">With a start or end frame set, the model makes an image-to-video clip and may ignore the other references.</div>`,
+    (v) => {
+      const [act, kind, role] = v.split(":");
+      if (act === "url") return openUrlModal();
+      if (act === "paste") return pasteFromClipboard();
+      pendingRole = role;
+      $("fileInput").accept = kind === "image" ? "image/*" : kind === "video" ? "video/*" : "audio/*";
+      $("fileInput").multiple = role === "ref";
+      $("fileInput").click();
+    });
+  };
+  const addRow = (v, icon, label, sub, disabled) => `
+    <button class="opt" data-v="${v}" ${disabled ? "disabled" : ""}><span class="ico">${icon}</span><span class="grow">${label}<small>${sub}</small></span></button>`;
+
+  $("fileInput").onchange = async () => {
+    const files = [...$("fileInput").files];
+    $("fileInput").value = "";
+    await addFiles(files, pendingRole);
+  };
+
+  const kindOf = (type) => type.startsWith("image/") ? "image" : type.startsWith("video/") ? "video" : type.startsWith("audio/") ? "audio" : null;
+
+  // Returns an error message if this reference can't be added in the current mode, or null.
+  function checkLimit(kind, role) {
+    const list = refs();
+    if (state.mode === "image") {
+      if (kind !== "image") return "Image mode only takes reference images.";
+      return list.length >= LIMITS.imageRefs ? `You can add up to ${LIMITS.imageRefs} reference images.` : null;
+    }
+    const { refs: L, caps, name } = vm();
+    if (role !== "ref") {
+      if (kind !== "image") return "Start and end frames must be images.";
+      return caps.frames.includes(role === "first" ? "first_frame" : "last_frame") ? null : `${name} doesn't support ${role === "first" ? "a start" : "an end"} frame.`;
+    }
+    const plain = list.filter((r) => r.role === "ref");
+    if (!L[kind]) return `${name} doesn't take reference ${KIND_NAMES[kind]}.`;
+    if (plain.length >= L.total) return `${name} takes up to ${L.total} references in total.`;
+    if (plain.filter((r) => r.kind === kind).length >= L[kind]) return `${name} takes up to ${L[kind]} reference ${kindWord(kind, L[kind])}.`;
+    return null;
+  }
+
+  const refSummary = (L) => {
+    const parts = [["image", "image"], ["video", "video"], ["audio", "audio"]]
+      .filter(([k]) => L[k]).map(([k, word]) => `${L[k]} ${word}${L[k] > 1 && k !== "audio" ? "s" : ""}`);
+    return `Up to ${parts.join(", ").replace(/, ([^,]*)$/, " and $1")} as references`;
+  };
+
+  // Video references that the current model can't take (e.g. after switching models), or null.
+  function refProblems() {
+    const { refs: L, caps, name } = vm();
+    const list = state.refs.video;
+    if (list.some((r) => r.role === "first") && !caps.frames.includes("first_frame")) return `${name} doesn't support a start frame. Remove it or pick another model.`;
+    if (list.some((r) => r.role === "last") && !caps.frames.includes("last_frame")) return `${name} doesn't support an end frame. Remove it or pick another model.`;
+    const plain = list.filter((r) => r.role === "ref");
+    for (const k of ["image", "video", "audio"]) {
+      const c = plain.filter((r) => r.kind === k).length;
+      if (c > (L[k] || 0)) return `${name} takes ${L[k] ? `up to ${L[k]}` : "no"} reference ${kindWord(k, L[k])}; you have ${c}.`;
+    }
+    if (plain.length > L.total) return `${name} takes up to ${L.total} references in total; you have ${plain.length}.`;
+    return null;
+  }
+
+  function pushRef(ref) {
+    const err = checkLimit(ref.kind, ref.role);
+    if (err) { status(err, "warn"); return false; }
+    ref.id = nextRefId++;
+    // A new start/end frame replaces the old one rather than piling up.
+    if (ref.role !== "ref") state.refs[state.mode] = refs().filter((r) => r.role !== ref.role);
+    refs().push(ref);
+    return true;
+  }
+
+  async function addFiles(files, role = "ref") {
+    let added = 0;
+    for (const f of files) {
+      const kind = kindOf(f.type);
+      if (!kind) { status(`${f.name}: unsupported file type.`, "warn"); continue; }
+      if (f.size > MAX_BYTES[kind]) { status(`${f.name} is over ${MAX_BYTES[kind] / 1e6} MB. Try a smaller file or add it by link.`, "warn"); continue; }
+      const err = checkLimit(kind, kind === "image" ? role : "ref");
+      if (err) { status(err, "warn"); break; }
+      try {
+        const url = kind === "image" ? await imageToDataUrl(f) : await fileToDataUrl(f);
+        if (pushRef({ kind, role: kind === "image" ? role : "ref", url, name: f.name || `pasted ${kind}` })) added++;
+      } catch (e) {
+        status(`${f.name}: ${e.message}`, "error");
+      }
+      if (role !== "ref") break; // frames take a single image
+    }
+    if (added) status(`Added ${added} reference${added > 1 ? "s" : ""}.`, "ok");
+    render();
+  }
+
+  const fileToDataUrl = (f) => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error("could not read the file"));
+    r.readAsDataURL(f);
+  });
+
+  // Scale big images down so the request stays small; keep small ones untouched.
+  async function imageToDataUrl(f) {
+    if (f.type === "image/svg+xml" || f.type === "image/gif") return fileToDataUrl(f);
+    let bmp;
+    try { bmp = await createImageBitmap(f); } catch { return fileToDataUrl(f); }
+    const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && f.size < 4e6) { bmp.close?.(); return fileToDataUrl(f); }
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale);
+    c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close?.();
+    return f.type === "image/png" ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.92);
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const items = await navigator.clipboard.read();
+      const files = [];
+      for (const item of items) {
+        const type = item.types.find((t) => kindOf(t));
+        if (type) files.push(new File([await item.getType(type)], `pasted.${type.split("/")[1]}`, { type }));
+      }
+      if (!files.length) return status("No image found on the clipboard.", "warn");
+      await addFiles(files, "ref");
+    } catch {
+      status("Clipboard access was blocked. Press Ctrl/⌘+V instead.", "warn");
+    }
+  }
+
+  // Paste anywhere (files from the clipboard become references; text pastes normally).
+  document.addEventListener("paste", (e) => {
+    const files = [...(e.clipboardData?.files || [])].filter((f) => kindOf(f.type));
+    if (!files.length) return;
+    e.preventDefault();
+    addFiles(files, "ref");
+  });
+
+  // Drag and drop anywhere.
+  let dragDepth = 0;
+  const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+  addEventListener("dragenter", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    if (dragDepth++ === 0) {
+      $("dropHint").textContent = state.mode === "image"
+        ? "Images become reference images"
+        : "Images, videos and audio become references. Click an image's label to make it a start or end frame.";
+      $("dropzone").classList.remove("hidden");
+    }
+  });
+  addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+  addEventListener("dragleave", (e) => { if (hasFiles(e) && --dragDepth <= 0) { dragDepth = 0; $("dropzone").classList.add("hidden"); } });
+  addEventListener("drop", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    dragDepth = 0;
+    $("dropzone").classList.add("hidden");
+    addFiles([...e.dataTransfer.files], "ref");
+  });
+
+  // ---------- add by link ----------
+  function openUrlModal() {
+    const img = state.mode === "image";
+    $("urlRole").innerHTML = img
+      ? `<option value="image:ref">Reference image</option>`
+      : `<option value="auto">Detect from link (reference)</option>
+         <option value="image:ref">Reference image</option><option value="image:first">Start frame</option>
+         <option value="image:last">End frame</option><option value="video:ref">Reference video</option>
+         <option value="audio:ref">Reference audio</option>`;
+    $("urlRole").classList.toggle("hidden", img);
+    $("urlInput").value = "";
+    $("urlModal").classList.remove("hidden");
+    setTimeout(() => $("urlInput").focus(), 0);
+  }
+  const guessKind = (url) => {
+    const path = url.split(/[?#]/)[0].toLowerCase();
+    if (/\.(mp4|mov|webm|m4v|mkv)$/.test(path)) return "video";
+    if (/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(path)) return "audio";
+    return "image";
+  };
+  $("urlCancel").onclick = () => $("urlModal").classList.add("hidden");
+  $("urlModal").onclick = (e) => { if (e.target === $("urlModal")) $("urlModal").classList.add("hidden"); };
+  $("urlAdd").onclick = () => {
+    const url = $("urlInput").value.trim();
+    if (!/^https:\/\/\S+$/i.test(url)) { status("Enter a link that starts with https://", "warn"); return; }
+    let [kind, role] = $("urlRole").value.split(":");
+    if (kind === "auto") { kind = guessKind(url); role = "ref"; }
+    if (pushRef({ kind, role, url, name: url })) status("Added reference from link.", "ok");
+    $("urlModal").classList.add("hidden");
+    render();
+  };
+  $("urlInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("urlAdd").click(); });
 
   // ---------- API key modal ----------
   function openKeyModal() {
@@ -499,6 +988,7 @@
     $("keyModal").classList.add("hidden");
     status(apiKey ? "API key saved." : "API key cleared.", apiKey ? "ok" : "");
     render();
+    if (apiKey) loadVideoModels();
   };
   $("apiKey").addEventListener("keydown", (e) => { if (e.key === "Enter") $("keySave").click(); });
 
@@ -530,13 +1020,16 @@
 
   // ---------- prompt enhancement ----------
   async function enhance(text, target) {
+    const refNote = refs().length
+      ? ` The user is also attaching ${refs().length} reference file(s) the model will see; refer to them naturally (e.g. "the person in the reference image") instead of inventing their details.`
+      : "";
     const guide = target === "video"
       ? "Rewrite it as a vivid prompt for a short AI video clip: describe the subject, action and motion over time, camera movement, setting, lighting, mood, and any sounds or spoken lines."
       : "Rewrite it as a vivid prompt for an AI image: describe the subject, composition, setting, lighting, color palette, style and mood.";
     const data = await api("/chat/completions", {
       model: ENHANCER_MODEL,
       messages: [
-        { role: "system", content: "You improve prompts for generative media models. " + guide +
+        { role: "system", content: "You improve prompts for generative media models. " + guide + refNote +
           " Keep the user's intent. Stay under 120 words. Reply with ONLY the improved prompt, no preamble, quotes or notes." },
         { role: "user", content: text },
       ],
@@ -565,18 +1058,54 @@
   };
 
   // ---------- gallery ----------
-  function addCard(label, isVideo) {
+  function addCard(label, isVideo, aspect) {
     $("hero").classList.add("hidden");
     $("gallerySection").classList.remove("hidden");
     const card = document.createElement("div");
     card.className = "card" + (isVideo ? " is-video" : "");
-    card.innerHTML = `<div class="pending" style="aspect-ratio:${cssRatio(isVideo ? state.videoAspect : state.imageAspect)}">
+    card.innerHTML = `<div class="pending" style="aspect-ratio:${aspect === "Auto" ? "16 / 9" : aspect.replace(":", " / ")}">
       <div class="spinner"></div><b>${esc(label)}</b><span class="msg">Generating…</span></div>`;
     $("gallery").prepend(card);
     return card;
   }
-  const cssRatio = (r) => r === "Auto" ? "16 / 9" : r.replace(":", " / ");
   const failCard = (card, label, msg) => { card.innerHTML = `<div class="fail"><b>${esc(label)}</b>${esc(msg)}</div>`; };
+
+  function finishCard(card, { kind, src, prompt: text, info, filename }) {
+    cardData.set(card, { kind, src, prompt: text });
+    const media = kind === "image"
+      ? `<img alt="${esc(text)}" src="${src}">`
+      : `<video controls playsinline src="${src}"></video>`;
+    const acts = kind === "image"
+      ? `<button class="act" data-act="ref" title="Use as a reference image">Use as ref</button>
+         <button class="act" data-act="animate" title="Make a video that starts on this image">Animate</button>
+         <button class="act" data-act="reuse" title="Put this prompt back in the box">Reuse prompt</button>`
+      : `<button class="act" data-act="ref" title="Use as a reference video">Use as ref</button>
+         <button class="act" data-act="reuse" title="Put this prompt back in the box">Reuse prompt</button>`;
+    card.innerHTML = `${media}<div class="overlay"><span>${info}</span>
+      <div class="acts">${acts}<a class="act dl" download="${filename}" href="${src}">Download</a></div></div>`;
+  }
+
+  $("gallery").addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const d = cardData.get(btn.closest(".card"));
+    if (!d) return;
+    if (btn.dataset.act === "reuse") {
+      prompt.value = d.prompt; autosize(); prompt.focus();
+      status("Prompt copied into the box.", "ok");
+    } else if (btn.dataset.act === "animate") {
+      state.mode = "video";
+      if (pushRef({ kind: "image", role: "first", url: d.src, name: "Generated image" })) status("Set as the video's start frame. Describe the motion and hit Generate.", "ok");
+      render(); prompt.focus();
+    } else if (btn.dataset.act === "ref") {
+      if (d.kind === "video") state.mode = "video";
+      let url = d.src;
+      if (url.startsWith("blob:")) url = await fileToDataUrl(await (await fetch(url)).blob());
+      if (pushRef({ kind: d.kind, role: "ref", url, name: `Generated ${d.kind}` })) status(`Added as a reference ${d.kind}.`, "ok");
+      render();
+    }
+  });
+
   $("clearBtn").onclick = () => {
     $("gallery").querySelectorAll("video[src^=blob]").forEach((v) => URL.revokeObjectURL(v.src));
     $("gallery").innerHTML = "";
@@ -590,8 +1119,10 @@
     state.busy = true; render();
     try {
       needKey();
-      if (!prompt.value.trim()) throw new Error("Describe what you want to create first.");
-      const text = state.autoEnhance ? await runEnhance() : prompt.value.trim();
+      if (!prompt.value.trim() && !(state.mode === "video" && refs().some((r) => r.role === "first"))) {
+        throw new Error("Describe what you want to create first.");
+      }
+      const text = state.autoEnhance && prompt.value.trim() ? await runEnhance() : prompt.value.trim();
       if (state.mode === "image") await generateImages(text); else await generateVideo(text);
     } catch (e) {
       status(e.message, "error");
@@ -600,23 +1131,32 @@
     }
   };
 
+  const seedValue = () => (state.seed ? Number(state.seed) : undefined);
+
   async function generateImages(text) {
     const models = IMAGE_MODELS.filter((m) => state.imageModels.includes(m.id));
     const jobs = models.flatMap((m) => Array.from({ length: state.count }, () => m));
-    const aspect = state.imageAspect;
-    status(`Generating ${jobs.length} image(s)…`);
+    const base = { prompt: text, n: 1 };
+    if (state.imageAspect !== "Auto") base.aspect_ratio = state.imageAspect;
+    if (state.quality !== "auto") base.quality = state.quality;
+    if (state.resolution !== "auto") base.resolution = state.resolution;
+    if (state.format !== "auto") base.output_format = state.format;
+    if (state.background !== "auto") base.background = state.background;
+    if (seedValue() !== undefined) base.seed = seedValue();
+    if (refs().length) base.input_references = refs().map((r) => ({ type: "image_url", image_url: { url: r.url } }));
+
+    status(`Generating ${jobs.length} image(s)${refs().length ? ` with ${refs().length} reference(s)` : ""}…`);
     const results = await Promise.allSettled(jobs.map(async (m) => {
-      const card = addCard(m.name, false);
+      const card = addCard(m.name, false, state.imageAspect);
       try {
-        const data = await api("/images", { model: m.id, prompt: text, aspect_ratio: aspect, n: 1 });
+        const data = await api("/images", { model: m.id, ...base });
         const item = data.data?.[0];
         if (!item?.b64_json && !item?.url) throw new Error("No image returned.");
-        const type = item.media_type || "image/png";
+        const type = item.media_type || (state.format !== "auto" ? `image/${state.format}` : "image/png");
         const src = item.b64_json ? `data:${type};base64,${item.b64_json}` : item.url;
         const ext = type.split("/")[1].replace("svg+xml", "svg").replace("jpeg", "jpg");
         const cost = data.usage?.cost != null ? ` · $${Number(data.usage.cost).toFixed(4)}` : "";
-        card.innerHTML = `<img alt="${esc(text)}" src="${src}">
-          <div class="overlay"><span>${esc(m.name)}${cost}</span><a class="dl" download="image-${Date.now()}.${ext}" href="${src}">Download</a></div>`;
+        finishCard(card, { kind: "image", src, prompt: text, info: `${esc(m.name)}${cost}`, filename: `image-${Date.now()}.${ext}` });
       } catch (e) {
         failCard(card, m.name, e.message);
         throw e;
@@ -629,14 +1169,33 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function generateVideo(text) {
-    const body = { model: VIDEO_MODEL.id, prompt: text, duration: state.duration, resolution: state.videoRes };
+    const model = vm();
+    if (!available(model)) throw new Error(`${model.name} isn't available on OpenRouter yet. Pick another video model.`);
+    const problem = refProblems();
+    if (problem) throw new Error(problem);
+    fitVideoSettings();
+    const body = { model: model.apiId, duration: state.duration, resolution: state.videoRes };
+    if (text) body.prompt = text;
     if (state.videoAspect !== "Auto") body.aspect_ratio = state.videoAspect;
-    if (state.frame) body.frame_images = [{ type: "image_url", image_url: { url: state.frame.dataUrl }, frame_type: "first_frame" }];
+    if (!state.audio && model.caps.audio) body.generate_audio = false;
+    if (seedValue() !== undefined && model.caps.seed) body.seed = seedValue();
 
-    const card = addCard(VIDEO_MODEL.name, true);
+    const list = refs();
+    const frames = ["first", "last"].map((role) => list.find((r) => r.role === role)).filter(Boolean);
+    const others = list.filter((r) => r.role === "ref");
+    if (frames.length) {
+      body.frame_images = frames.map((r) => ({ type: "image_url", image_url: { url: r.url }, frame_type: r.role === "first" ? "first_frame" : "last_frame" }));
+    }
+    if (others.length) {
+      body.input_references = others.map((r) => ({ type: `${r.kind}_url`, [`${r.kind}_url`]: { url: r.url } }));
+    }
+
+    const card = addCard(model.name, true, state.videoAspect);
     const msg = (t) => { const el = card.querySelector(".msg"); if (el) el.textContent = t; };
     try {
-      status("Submitting to HeyGen Video 1…");
+      status(frames.length && others.length
+        ? `Submitting… (with frames set, ${model.name} may ignore the other references)`
+        : `Submitting to ${model.name}…`, frames.length && others.length ? "warn" : "");
       const job = await api("/videos", body);
       const pollUrl = job.polling_url || `${API}/videos/${job.id}`;
       const started = Date.now();
@@ -660,17 +1219,19 @@
       if (!res.ok) throw new Error(`Download failed: ${res.status} ${res.statusText}`);
       const url = URL.createObjectURL(await res.blob());
       const cost = s.usage?.cost != null ? ` · $${Number(s.usage.cost).toFixed(3)}` : "";
-      card.innerHTML = `<video controls playsinline src="${url}"></video>
-        <div class="overlay"><span>${VIDEO_MODEL.name} · ${body.duration}s · ${body.resolution}${cost}</span>
-        <a class="dl" download="video-${Date.now()}.mp4" href="${url}">Download</a></div>`;
+      finishCard(card, {
+        kind: "video", src: url, prompt: text,
+        info: `${esc(model.name)} · ${body.duration}s · ${body.resolution}${cost}`, filename: `video-${Date.now()}.mp4`,
+      });
       status(`Video done in ${Math.round((Date.now() - started) / 1000)}s.`, "ok");
     } catch (e) {
-      failCard(card, VIDEO_MODEL.name, e.message);
+      failCard(card, model.name, e.message);
       throw e;
     }
   }
 
   render();
+  loadVideoModels();
   if (!apiKey) status("Click “API key” in the top right to add your OpenRouter key.");
 })();
 </script>
