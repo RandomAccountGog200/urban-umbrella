@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" index.html \
+            --title "OpenRouter Studio $GITHUB_REF_NAME" \
+            --notes "Single-file OpenRouter image and video generator. Download \`index.html\`, open it in a browser, and paste your OpenRouter API key.
+
+          - Prompt enhancing with Nemotron 3 Ultra (free)
+          - Images: GPT Image 2, FLUX.2 Klein 4B, Riverflow v2.5 Fast
+          - Video: HeyGen Video 1 (5-15s, 480p/768p, optional start frame)"
