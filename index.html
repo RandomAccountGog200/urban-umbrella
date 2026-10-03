@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenRouter Studio</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #16181d; --muted: #646b78;
+    --border: #dde1e7; --accent: #5b4cf0; --accent-text: #ffffff;
+    --error: #c62828; --ok: #2e7d32; --input: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115; --panel: #181b21; --text: #e8eaee; --muted: #9aa1ad;
+      --border: #2a2f38; --accent: #7c6ff5; --accent-text: #ffffff;
+      --error: #ef7070; --ok: #6fcf7a; --input: #11141a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  }
+  label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  input, textarea, select {
+    width: 100%; font: inherit; color: var(--text); background: var(--input);
+    border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px;
+  }
+  textarea { min-height: 96px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .row > * { flex: 1 1 160px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab {
+    flex: 0 0 auto; padding: 8px 18px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text); font: inherit;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button.primary, button.secondary {
+    font: inherit; font-weight: 600; border-radius: 8px; padding: 10px 16px; cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); border: 1px solid var(--accent); }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .check { display: flex; gap: 8px; align-items: center; font-weight: 400; font-size: 14px; margin: 0; }
+  .check input { width: auto; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+  .status { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 1.5em; white-space: pre-wrap; }
+  .status.error { color: var(--error); }
+  .status.ok { color: var(--ok); }
+  .models { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+  .models label { font-weight: 400; display: flex; gap: 8px; align-items: center; margin: 0;
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+  .models input { width: auto; }
+  .models small { color: var(--muted); display: block; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+  .card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .card img, .card video { display: block; width: 100%; height: auto; background: #000; }
+  .card .meta { padding: 8px 10px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .card .meta a { color: var(--accent); }
+  .card .err { padding: 12px; color: var(--error); font-size: 13px; }
+  .card .wait { padding: 40px 12px; text-align: center; color: var(--muted); font-size: 13px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>OpenRouter Studio</h1>
+  <p class="sub">Make images and videos through OpenRouter, with optional prompt enhancement by Nemotron 3 Ultra (free).</p>
+
+  <section class="panel">
+    <label for="apiKey">OpenRouter API key</label>
+    <div class="row">
+      <input id="apiKey" type="password" placeholder="sk-or-..." autocomplete="off" spellcheck="false">
+      <label class="check" style="flex:0 0 auto"><input id="rememberKey" type="checkbox"> Remember on this device</label>
+    </div>
+    <div class="hint">The key stays in this browser and is sent only to openrouter.ai. Get one at openrouter.ai/keys.</div>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-image" aria-selected="true">Images</button>
+    <button class="tab" role="tab" id="tab-video" aria-selected="false">Video</button>
+  </div>
+
+  <section class="panel">
+    <label for="prompt">Prompt</label>
+    <textarea id="prompt" placeholder="A cozy cabin in a snowy forest at dusk, warm light in the windows"></textarea>
+    <div class="actions">
+      <button class="secondary" id="enhanceBtn">✨ Enhance prompt</button>
+      <label class="check"><input id="autoEnhance" type="checkbox"> Enhance automatically before generating</label>
+    </div>
+    <div class="status" id="enhanceStatus"></div>
+  </section>
+
+  <!-- Image options -->
+  <section class="panel" id="imagePanel">
+    <label>Image models (pick one or more)</label>
+    <div class="models" id="imageModels"></div>
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label for="imgAspect">Aspect ratio</label>
+        <select id="imgAspect">
+          <option value="1:1">1:1 square</option>
+          <option value="16:9">16:9 wide</option>
+          <option value="9:16">9:16 tall</option>
+          <option value="4:3">4:3</option>
+          <option value="3:4">3:4</option>
+        </select>
+      </div>
+      <div style="flex:0 0 auto">
+        <button class="primary" id="genImageBtn">Generate images</button>
+      </div>
+    </div>
+    <div class="status" id="imageStatus"></div>
+    <div class="grid" id="imageResults"></div>
+  </section>
+
+  <!-- Video options -->
+  <section class="panel hidden" id="videoPanel">
+    <div class="row">
+      <div>
+        <label for="vidDuration">Duration (seconds)</label>
+        <select id="vidDuration"></select>
+      </div>
+      <div>
+        <label for="vidRes">Resolution</label>
+        <select id="vidRes">
+          <option value="480p">480p (cheaper)</option>
+          <option value="768p">768p</option>
+        </select>
+      </div>
+      <div>
+        <label for="vidAspect">Aspect ratio</label>
+        <select id="vidAspect">
+          <option value="">Model default</option>
+          <option value="16:9">16:9</option>
+          <option value="9:16">9:16</option>
+          <option value="1:1">1:1</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label for="vidFrame">Start frame image (optional)</label>
+        <input id="vidFrame" type="file" accept="image/*">
+      </div>
+      <div style="flex:0 0 auto">
+        <button class="primary" id="genVideoBtn">Generate video</button>
+      </div>
+    </div>
+    <div class="hint">Model: HeyGen Video 1. Clips include generated audio and usually take 30 seconds to a few minutes.</div>
+    <div class="status" id="videoStatus"></div>
+    <div class="grid" id="videoResults"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const API = "https://openrouter.ai/api/v1";
+  const ENHANCER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
+  const VIDEO_MODEL = "heygen/heygen-video-1";
+  const IMAGE_MODELS = [
+    { id: "openai/gpt-image-2", name: "GPT Image 2", note: "~$0.006 / image" },
+    { id: "black-forest-labs/flux.2-klein-4b", name: "FLUX.2 Klein 4B", note: "~$0.014 / image" },
+    { id: "sourceful/riverflow-v2.5-fast", name: "Riverflow v2.5 Fast", note: "~$0.018 / image" },
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  let mode = "image";
+
+  // ---------- storage (best effort) ----------
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+    del(k) { try { localStorage.removeItem(k); } catch {} },
+  };
+  const savedKey = store.get("or_key");
+  if (savedKey) { $("apiKey").value = savedKey; $("rememberKey").checked = true; }
+  const persistKey = () => {
+    if ($("rememberKey").checked) store.set("or_key", $("apiKey").value.trim());
+    else store.del("or_key");
+  };
+  $("rememberKey").addEventListener("change", persistKey);
+  $("apiKey").addEventListener("input", persistKey);
+
+  // ---------- UI setup ----------
+  $("imageModels").innerHTML = IMAGE_MODELS.map((m, i) => `
+    <label><input type="checkbox" value="${m.id}" ${i === 0 ? "checked" : ""}>
+      <span>${m.name}<small>${m.id} · ${m.note}</small></span></label>`).join("");
+
+  for (let s = 5; s <= 15; s++) {
+    $("vidDuration").insertAdjacentHTML("beforeend", `<option value="${s}" ${s === 5 ? "selected" : ""}>${s}s</option>`);
+  }
+
+  function setMode(m) {
+    mode = m;
+    $("tab-image").setAttribute("aria-selected", m === "image");
+    $("tab-video").setAttribute("aria-selected", m === "video");
+    $("imagePanel").classList.toggle("hidden", m !== "image");
+    $("videoPanel").classList.toggle("hidden", m !== "video");
+  }
+  $("tab-image").onclick = () => setMode("image");
+  $("tab-video").onclick = () => setMode("video");
+
+  function status(id, msg, kind = "") {
+    const el = $(id);
+    el.textContent = msg;
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // ---------- API helpers ----------
+  function key() {
+    const k = $("apiKey").value.trim();
+    if (!k) throw new Error("Add your OpenRouter API key first.");
+    return k;
+  }
+  function headers() {
+    return {
+      "Authorization": "Bearer " + key(),
+      "Content-Type": "application/json",
+      "X-Title": "OpenRouter Studio",
+    };
+  }
+  async function api(path, body) {
+    const url = path.startsWith("http") ? path : API + path;
+    const res = await fetch(url, body
+      ? { method: "POST", headers: headers(), body: JSON.stringify(body) }
+      : { headers: headers() });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    if (!res.ok || data.error) {
+      const msg = data?.error?.message || data?.error || data?.raw || res.statusText;
+      throw new Error(`${res.status}: ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
+    }
+    return data;
+  }
+
+  // ---------- prompt enhancement ----------
+  async function enhance(prompt, target) {
+    const guide = target === "video"
+      ? "Rewrite it as a vivid prompt for a short AI video clip: describe the subject, action and motion over time, camera movement, setting, lighting, mood, and any sounds or spoken lines."
+      : "Rewrite it as a vivid prompt for an AI image: describe the subject, composition, setting, lighting, color palette, style and mood.";
+    const data = await api("/chat/completions", {
+      model: ENHANCER_MODEL,
+      messages: [
+        { role: "system", content: "You improve prompts for generative media models. " + guide +
+          " Keep the user's intent. Stay under 120 words. Reply with ONLY the improved prompt, no preamble, quotes or notes." },
+        { role: "user", content: prompt },
+      ],
+      reasoning: { effort: "low", exclude: true },
+    });
+    let out = data.choices?.[0]?.message?.content || "";
+    out = out.replace(/<think>[\s\S]*?<\/think>/gi, "").trim().replace(/^["'“]+|["'”]+$/g, "").trim();
+    if (!out) throw new Error("The enhancer returned an empty prompt.");
+    return out;
+  }
+
+  async function runEnhance(statusId) {
+    const p = $("prompt").value.trim();
+    if (!p) throw new Error("Write a prompt first.");
+    status(statusId, "Enhancing prompt with Nemotron 3 Ultra…");
+    const better = await enhance(p, mode);
+    $("prompt").value = better;
+    status(statusId, "Prompt enhanced.", "ok");
+    return better;
+  }
+
+  $("enhanceBtn").onclick = async () => {
+    const btn = $("enhanceBtn");
+    btn.disabled = true;
+    try { await runEnhance("enhanceStatus"); }
+    catch (e) { status("enhanceStatus", e.message, "error"); }
+    finally { btn.disabled = false; }
+  };
+
+  async function getPrompt() {
+    if ($("autoEnhance").checked) return runEnhance("enhanceStatus");
+    const p = $("prompt").value.trim();
+    if (!p) throw new Error("Write a prompt first.");
+    return p;
+  }
+
+  // ---------- images ----------
+  $("genImageBtn").onclick = async () => {
+    const btn = $("genImageBtn");
+    const models = [...$("imageModels").querySelectorAll("input:checked")].map((i) => i.value);
+    btn.disabled = true;
+    try {
+      key();
+      if (!models.length) throw new Error("Pick at least one image model.");
+      const prompt = await getPrompt();
+      const aspect = $("imgAspect").value;
+      status("imageStatus", `Generating with ${models.length} model(s)…`);
+
+      const cards = models.map((m) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<div class="wait">Generating with ${esc(m)}…</div>`;
+        $("imageResults").prepend(card);
+        return card;
+      });
+
+      const results = await Promise.allSettled(models.map(async (model, i) => {
+        const data = await api("/images", { model, prompt, aspect_ratio: aspect, n: 1 });
+        const item = data.data?.[0];
+        if (!item?.b64_json && !item?.url) throw new Error("No image returned.");
+        const src = item.b64_json ? `data:${item.media_type || "image/png"};base64,${item.b64_json}` : item.url;
+        const ext = (item.media_type || "image/png").split("/")[1].replace("svg+xml", "svg");
+        const cost = data.usage?.cost != null ? ` · $${Number(data.usage.cost).toFixed(4)}` : "";
+        cards[i].innerHTML = `<img alt="${esc(prompt)}" src="${src}">
+          <div class="meta"><span>${esc(model)}${cost}</span><a download="image-${Date.now()}.${ext}" href="${src}">Download</a></div>`;
+      }));
+
+      results.forEach((r, i) => {
+        if (r.status === "rejected") cards[i].innerHTML = `<div class="err"><b>${esc(models[i])}</b><br>${esc(r.reason.message)}</div>`;
+      });
+      const ok = results.filter((r) => r.status === "fulfilled").length;
+      status("imageStatus", `Done: ${ok}/${models.length} image(s) generated.`, ok ? "ok" : "error");
+    } catch (e) {
+      status("imageStatus", e.message, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  // ---------- video ----------
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const fileToDataUrl = (f) => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error("Could not read the start frame image."));
+    r.readAsDataURL(f);
+  });
+
+  $("genVideoBtn").onclick = async () => {
+    const btn = $("genVideoBtn");
+    btn.disabled = true;
+    let card;
+    try {
+      key();
+      const prompt = await getPrompt();
+      const body = {
+        model: VIDEO_MODEL,
+        prompt,
+        duration: Number($("vidDuration").value),
+        resolution: $("vidRes").value,
+      };
+      if ($("vidAspect").value) body.aspect_ratio = $("vidAspect").value;
+      const frame = $("vidFrame").files[0];
+      if (frame) {
+        body.frame_images = [{ type: "image_url", image_url: { url: await fileToDataUrl(frame) }, frame_type: "first_frame" }];
+      }
+
+      card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<div class="wait">Submitting video job…</div>`;
+      $("videoResults").prepend(card);
+
+      status("videoStatus", "Submitting to HeyGen Video 1…");
+      const job = await api("/videos", body);
+      const pollUrl = job.polling_url || `${API}/videos/${job.id}`;
+      const started = Date.now();
+
+      let state = job;
+      while (!["completed", "failed", "cancelled", "expired"].includes(state.status)) {
+        const secs = Math.round((Date.now() - started) / 1000);
+        status("videoStatus", `Status: ${state.status || "pending"} · ${secs}s elapsed`);
+        card.querySelector(".wait").textContent = `Generating video… ${secs}s`;
+        if (secs > 20 * 60) throw new Error("Timed out after 20 minutes.");
+        await sleep(5000);
+        state = await api(pollUrl);
+      }
+      if (state.status !== "completed") {
+        const why = state.error?.message || state.error || state.status;
+        throw new Error(`Video ${state.status}: ${typeof why === "string" ? why : JSON.stringify(why)}`);
+      }
+
+      status("videoStatus", "Downloading video…");
+      const contentUrl = state.unsigned_urls?.[0] || `${API}/videos/${job.id}/content?index=0`;
+      const res = await fetch(contentUrl, { headers: { Authorization: "Bearer " + key() } });
+      if (!res.ok) throw new Error(`Download failed: ${res.status} ${res.statusText}`);
+      const url = URL.createObjectURL(await res.blob());
+      const cost = state.usage?.cost != null ? ` · $${Number(state.usage.cost).toFixed(3)}` : "";
+
+      card.innerHTML = `<video controls playsinline src="${url}"></video>
+        <div class="meta"><span>HeyGen Video 1 · ${body.duration}s · ${body.resolution}${cost}</span>
+        <a download="video-${Date.now()}.mp4" href="${url}">Download</a></div>`;
+      status("videoStatus", `Done in ${Math.round((Date.now() - started) / 1000)}s.`, "ok");
+    } catch (e) {
+      status("videoStatus", e.message, "error");
+      if (card) card.innerHTML = `<div class="err">${esc(e.message)}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  };
+})();
+</script>
+</body>
+</html>
