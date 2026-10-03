@@ -4,178 +4,338 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenRouter Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Archivo:wght@800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f7f9; --panel: #ffffff; --text: #16181d; --muted: #646b78;
-    --border: #dde1e7; --accent: #5b4cf0; --accent-text: #ffffff;
-    --error: #c62828; --ok: #2e7d32; --input: #ffffff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f1115; --panel: #181b21; --text: #e8eaee; --muted: #9aa1ad;
-      --border: #2a2f38; --accent: #7c6ff5; --accent-text: #ffffff;
-      --error: #ef7070; --ok: #6fcf7a; --input: #11141a;
-    }
+    --bg: #0c0d0f; --bg-2: #141518; --panel: #1b1c20; --panel-2: #222328;
+    --line: #2c2d33; --line-2: #3a3b42; --text: #f2f3f5; --muted: #8b8d96; --dim: #5e6068;
+    --lime: #d4fb1e; --lime-ink: #101204; --error: #ff6b6b;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --display: "Archivo", "Inter", system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; background: radial-gradient(1200px 600px at 50% 20%, #17181c 0%, var(--bg) 60%) fixed, var(--bg);
+    color: var(--text); font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  .sub { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
-  .panel {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px; margin-bottom: 16px;
-  }
-  label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
-  input, textarea, select {
-    width: 100%; font: inherit; color: var(--text); background: var(--input);
-    border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px;
-  }
-  textarea { min-height: 96px; resize: vertical; }
-  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-  .row > * { flex: 1 1 160px; }
-  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-  .tab {
-    flex: 0 0 auto; padding: 8px 18px; border-radius: 999px; cursor: pointer;
-    border: 1px solid var(--border); background: var(--panel); color: var(--text); font: inherit;
-  }
-  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  button.primary, button.secondary {
-    font: inherit; font-weight: 600; border-radius: 8px; padding: 10px 16px; cursor: pointer;
-  }
-  button.primary { background: var(--accent); color: var(--accent-text); border: 1px solid var(--accent); }
-  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  button:disabled { opacity: .55; cursor: not-allowed; }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .check { display: flex; gap: 8px; align-items: center; font-weight: 400; font-size: 14px; margin: 0; }
-  .check input { width: auto; }
-  .hint { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
-  .status { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 1.5em; white-space: pre-wrap; }
-  .status.error { color: var(--error); }
-  .status.ok { color: var(--ok); }
-  .models { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
-  .models label { font-weight: 400; display: flex; gap: 8px; align-items: center; margin: 0;
-    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
-  .models input { width: auto; }
-  .models small { color: var(--muted); display: block; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
-  .card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel); }
-  .card img, .card video { display: block; width: 100%; height: auto; background: #000; }
-  .card .meta { padding: 8px 10px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-  .card .meta a { color: var(--accent); }
-  .card .err { padding: 12px; color: var(--error); font-size: 13px; }
-  .card .wait { padding: 40px 12px; text-align: center; color: var(--muted); font-size: 13px; }
+  button { font: inherit; color: inherit; }
   .hidden { display: none !important; }
+
+  /* ---------- top bar ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20; height: 56px; padding: 0 16px;
+    display: flex; align-items: center; gap: 20px;
+    background: rgba(12, 13, 15, .85); backdrop-filter: blur(12px);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .logo svg { width: 26px; height: 26px; }
+  nav { display: flex; gap: 4px; }
+  .nav-link {
+    background: none; border: 0; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    color: var(--muted); font-weight: 600; font-size: 15px;
+  }
+  .nav-link:hover { color: var(--text); }
+  .nav-link.active { color: var(--lime); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px;
+    border-radius: 999px; border: 0; background: var(--panel-2); cursor: pointer; font-weight: 600;
+  }
+  .pill:hover { background: var(--line); }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--error); }
+  .pill .dot.on { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .badge {
+    font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+    background: #2f3a05; color: var(--lime); text-transform: uppercase; letter-spacing: .03em;
+  }
+
+  /* ---------- hero ---------- */
+  main { padding: 0 16px 230px; max-width: 1400px; margin: 0 auto; }
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 9vh; }
+  .collage { position: relative; height: 150px; width: 440px; max-width: 100%; margin-bottom: 28px; }
+  .tile {
+    position: absolute; top: 10px; width: 118px; height: 118px; border-radius: 16px;
+    border: 3px solid #5d6370; box-shadow: 0 18px 40px rgba(0,0,0,.6), 0 0 60px rgba(90,140,255,.12);
+    overflow: hidden;
+  }
+  .tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,255,255,.18), transparent 45%); }
+  .t1 { left: 4%;  transform: rotate(-10deg); background: radial-gradient(circle at 55% 35%, #dbe8ff 0 8%, #5c86c9 20%, #12233f 70%); }
+  .t2 { left: 25%; transform: rotate(4deg); top: 0; background: linear-gradient(180deg, #8fb0e8, #24477e 60%, #0b1a33); }
+  .t3 { left: 47%; border-radius: 50%; background: repeating-linear-gradient(0deg, #1d3560 0 14px, #27477d 14px 16px), #1d3560; }
+  .t3::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 14px, rgba(160,190,240,.35) 14px 16px); }
+  .t4 { left: 69%; transform: rotate(-4deg); background: radial-gradient(ellipse at 45% 40%, #f1f4fa 0 18%, #9fb0cc 32%, #2b3d5e 65%, #121c30); }
+  .hero h1 {
+    margin: 0; font-family: var(--display); font-weight: 900; letter-spacing: -.01em;
+    font-size: clamp(28px, 4.2vw, 46px); line-height: 1.05; text-transform: uppercase;
+  }
+  .hero h1 span { color: var(--lime); display: block; }
+  .hero p { color: var(--muted); font-size: 16px; margin: 14px 0 0; }
+
+  /* ---------- gallery ---------- */
+  .gallery-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 12px; }
+  .gallery-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--muted); }
+  .link-btn { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 13px; }
+  .link-btn:hover { color: var(--text); }
+  .gallery { columns: 4 260px; column-gap: 12px; }
+  .card {
+    break-inside: avoid; margin: 0 0 12px; position: relative; border-radius: 14px; overflow: hidden;
+    background: var(--panel); border: 1px solid var(--line);
+  }
+  .card img, .card video { display: block; width: 100%; height: auto; }
+  .card .overlay {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 10px 10px;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 8px;
+    background: linear-gradient(transparent, rgba(0,0,0,.8)); opacity: 0; transition: opacity .15s;
+    font-size: 12px; color: #d9dbe0;
+  }
+  .card:hover .overlay, .card:focus-within .overlay { opacity: 1; }
+  .card.is-video .overlay { position: static; opacity: 1; background: var(--panel); padding: 10px; }
+  .dl {
+    flex: 0 0 auto; background: var(--lime); color: var(--lime-ink); text-decoration: none;
+    font-weight: 700; padding: 5px 10px; border-radius: 8px;
+  }
+  .card .pending {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    color: var(--muted); font-size: 13px; padding: 16px; text-align: center;
+    background: linear-gradient(110deg, var(--panel) 30%, var(--panel-2) 50%, var(--panel) 70%);
+    background-size: 200% 100%; animation: shimmer 1.6s linear infinite;
+  }
+  .card .pending b { color: var(--text); font-weight: 600; }
+  .card .fail { padding: 16px; color: var(--error); font-size: 13px; word-break: break-word; }
+  .card .fail b { display: block; color: var(--text); margin-bottom: 4px; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--lime); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- composer ---------- */
+  .composer-wrap { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 30; padding: 0 16px; pointer-events: none; }
+  .composer {
+    pointer-events: auto; max-width: 1120px; margin: 0 auto; display: flex; gap: 16px; align-items: stretch;
+    padding: 14px 14px 14px 22px; border-radius: 22px; border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(34,35,40,.96), rgba(24,25,29,.96)); backdrop-filter: blur(16px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  }
+  .composer-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .status { font-size: 12.5px; color: var(--muted); min-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status.error { color: var(--error); }
+  .status.ok { color: var(--lime); }
+  textarea#prompt {
+    width: 100%; resize: none; border: 0; outline: 0; background: transparent; color: var(--text);
+    font: 15px/1.45 var(--font); padding: 2px 0; min-height: 24px; max-height: 160px;
+  }
+  textarea#prompt::placeholder { color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip-group { display: inline-flex; align-items: center; border: 1px solid var(--line-2); border-radius: 11px; background: rgba(255,255,255,.02); }
+  .chip-group > * + * { border-left: 1px solid var(--line-2); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 13px;
+    border: 1px solid var(--line-2); border-radius: 11px; background: rgba(255,255,255,.02);
+    font-weight: 600; font-size: 13.5px; cursor: pointer; white-space: nowrap; position: relative;
+  }
+  .chip-group .chip { border: 0; border-radius: 0; background: none; }
+  .chip:hover { background: rgba(255,255,255,.06); }
+  .chip svg { width: 15px; height: 15px; flex: 0 0 auto; }
+  .chip .muted { color: var(--muted); font-weight: 500; }
+  .chip.on { border-color: #5a6b10; color: var(--lime); background: rgba(212,251,30,.07); }
+  .chip.thumb img { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; }
+  .chip .x { color: var(--muted); margin-left: 2px; }
+  .model-mark {
+    width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--lime); color: var(--lime-ink); font-weight: 800; font-size: 11px;
+  }
+  .stepper { display: inline-flex; align-items: center; height: 38px; border: 1px solid var(--line-2); border-radius: 11px; }
+  .stepper button { width: 34px; height: 100%; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; }
+  .stepper button:hover:not(:disabled) { color: var(--text); }
+  .stepper button:disabled { opacity: .35; cursor: default; }
+  .stepper .val { min-width: 40px; text-align: center; font-weight: 700; font-size: 13.5px; }
+  .stepper .val small { color: var(--muted); font-weight: 500; }
+  .generate {
+    flex: 0 0 150px; border: 0; border-radius: 14px; background: var(--lime); color: var(--lime-ink);
+    font-weight: 700; font-size: 16px; cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; transition: filter .15s, transform .05s;
+  }
+  .generate:hover { filter: brightness(1.06); }
+  .generate:active { transform: scale(.98); }
+  .generate:disabled { filter: grayscale(.6) brightness(.7); cursor: not-allowed; }
+  .generate small { font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+
+  /* ---------- menus & modal ---------- */
+  .menu {
+    position: fixed; z-index: 50; min-width: 220px; max-width: calc(100vw - 32px); padding: 6px;
+    background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.6);
+  }
+  .menu h4 { margin: 6px 10px 6px; font-size: 11px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+  .opt {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px;
+    background: none; cursor: pointer; text-align: left; font-size: 13.5px;
+  }
+  .opt:hover { background: var(--panel-2); }
+  .opt .grow { flex: 1; min-width: 0; }
+  .opt small { display: block; color: var(--muted); font-size: 12px; }
+  .opt .tick { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--line-2); display: grid; place-items: center; flex: 0 0 auto; }
+  .opt.sel .tick { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+  .opt .tick svg { width: 12px; height: 12px; opacity: 0; }
+  .opt.sel .tick svg { opacity: 1; }
+  .opt .ratio { width: 18px; display: grid; place-items: center; }
+  .opt .ratio i { display: block; border: 1.5px solid currentColor; border-radius: 3px; }
+
+  .backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 16px; }
+  .modal {
+    width: 440px; max-width: 100%; background: var(--panel); border: 1px solid var(--line-2);
+    border-radius: 18px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.7);
+  }
+  .modal h3 { margin: 0 0 4px; font-size: 18px; }
+  .modal p { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
+  .modal input[type=password], .modal input[type=text] {
+    width: 100%; height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2);
+    background: var(--bg-2); color: var(--text); font: 14px var(--font);
+  }
+  .modal input:focus { outline: 2px solid var(--lime); outline-offset: -1px; }
+  .modal label.row { display: flex; gap: 8px; align-items: center; margin-top: 12px; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .btn { height: 38px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line-2); background: none; cursor: pointer; font-weight: 600; }
+  .btn.primary { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); }
+  .modal a { color: var(--lime); }
+
+  /* ---------- small screens ---------- */
+  @media (max-width: 720px) {
+    header { gap: 10px; }
+    .logo span { display: none; }
+    .composer { flex-direction: column; padding: 12px; border-radius: 18px; }
+    .generate { flex: 0 0 52px; flex-direction: row; gap: 10px; }
+    .composer-wrap { bottom: 8px; padding: 0 8px; }
+    main { padding-bottom: 300px; }
+    .collage { transform: scale(.8); }
+    .hero { padding-top: 5vh; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>OpenRouter Studio</h1>
-  <p class="sub">Make images and videos through OpenRouter, with optional prompt enhancement by Nemotron 3 Ultra (free).</p>
-
-  <section class="panel">
-    <label for="apiKey">OpenRouter API key</label>
-    <div class="row">
-      <input id="apiKey" type="password" placeholder="sk-or-..." autocomplete="off" spellcheck="false">
-      <label class="check" style="flex:0 0 auto"><input id="rememberKey" type="checkbox"> Remember on this device</label>
-    </div>
-    <div class="hint">The key stays in this browser and is sent only to openrouter.ai. Get one at openrouter.ai/keys.</div>
-  </section>
-
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-image" aria-selected="true">Images</button>
-    <button class="tab" role="tab" id="tab-video" aria-selected="false">Video</button>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#d4fb1e"/><path d="M9 21.5 15 9l3.6 7.4L21 12l2 9.5H9Z" fill="#101204"/></svg>
+    <span>OpenRouter Studio</span>
   </div>
+  <nav>
+    <button class="nav-link active" data-mode="image">Image</button>
+    <button class="nav-link" data-mode="video">Video</button>
+  </nav>
+  <div class="header-right">
+    <button class="pill" id="keyBtn" title="OpenRouter API key"><span class="dot" id="keyDot"></span>API key</button>
+  </div>
+</header>
 
-  <section class="panel">
-    <label for="prompt">Prompt</label>
-    <textarea id="prompt" placeholder="A cozy cabin in a snowy forest at dusk, warm light in the windows"></textarea>
-    <div class="actions">
-      <button class="secondary" id="enhanceBtn">✨ Enhance prompt</button>
-      <label class="check"><input id="autoEnhance" type="checkbox"> Enhance automatically before generating</label>
+<main>
+  <section class="hero" id="hero">
+    <div class="collage" aria-hidden="true">
+      <div class="tile t1"></div><div class="tile t2"></div><div class="tile t3"></div><div class="tile t4"></div>
     </div>
-    <div class="status" id="enhanceStatus"></div>
+    <h1>Start creating with <span id="heroModel">GPT Image 2</span></h1>
+    <p id="heroSub">Describe a scene, character, mood, or style — and watch it come to life</p>
   </section>
 
-  <!-- Image options -->
-  <section class="panel" id="imagePanel">
-    <label>Image models (pick one or more)</label>
-    <div class="models" id="imageModels"></div>
-    <div class="row" style="margin-top:12px">
-      <div>
-        <label for="imgAspect">Aspect ratio</label>
-        <select id="imgAspect">
-          <option value="1:1">1:1 square</option>
-          <option value="16:9">16:9 wide</option>
-          <option value="9:16">9:16 tall</option>
-          <option value="4:3">4:3</option>
-          <option value="3:4">3:4</option>
-        </select>
-      </div>
-      <div style="flex:0 0 auto">
-        <button class="primary" id="genImageBtn">Generate images</button>
-      </div>
+  <section id="gallerySection" class="hidden">
+    <div class="gallery-head">
+      <h2>Your creations</h2>
+      <button class="link-btn" id="clearBtn">Clear</button>
     </div>
-    <div class="status" id="imageStatus"></div>
-    <div class="grid" id="imageResults"></div>
-  </section>
-
-  <!-- Video options -->
-  <section class="panel hidden" id="videoPanel">
-    <div class="row">
-      <div>
-        <label for="vidDuration">Duration (seconds)</label>
-        <select id="vidDuration"></select>
-      </div>
-      <div>
-        <label for="vidRes">Resolution</label>
-        <select id="vidRes">
-          <option value="480p">480p (cheaper)</option>
-          <option value="768p">768p</option>
-        </select>
-      </div>
-      <div>
-        <label for="vidAspect">Aspect ratio</label>
-        <select id="vidAspect">
-          <option value="">Model default</option>
-          <option value="16:9">16:9</option>
-          <option value="9:16">9:16</option>
-          <option value="1:1">1:1</option>
-        </select>
-      </div>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <div>
-        <label for="vidFrame">Start frame image (optional)</label>
-        <input id="vidFrame" type="file" accept="image/*">
-      </div>
-      <div style="flex:0 0 auto">
-        <button class="primary" id="genVideoBtn">Generate video</button>
-      </div>
-    </div>
-    <div class="hint">Model: HeyGen Video 1. Clips include generated audio and usually take 30 seconds to a few minutes.</div>
-    <div class="status" id="videoStatus"></div>
-    <div class="grid" id="videoResults"></div>
+    <div class="gallery" id="gallery"></div>
   </section>
 </main>
+
+<div class="composer-wrap">
+  <div class="composer">
+    <div class="composer-main">
+      <div class="status" id="status"></div>
+      <textarea id="prompt" rows="1" placeholder="Describe the scene you imagine"></textarea>
+      <div class="chips">
+        <div class="chip-group">
+          <button class="chip" id="attachBtn" title="Add a start frame (video)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <button class="chip" id="enhanceBtn" title="Enhance prompt with Nemotron 3 Ultra (free)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/></svg>
+            Enhance
+          </button>
+        </div>
+        <button class="chip hidden thumb" id="frameChip" title="Remove start frame"><img id="frameThumb" alt=""><span>Start frame</span><span class="x">✕</span></button>
+        <button class="chip" id="autoChip" title="Enhance every prompt automatically before generating">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg>
+          Auto-enhance
+        </button>
+        <button class="chip" id="modelChip"><span class="model-mark" id="modelMark">G</span><span id="modelLabel">GPT Image 2</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+        <button class="chip" id="aspectChip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2.5"/></svg>
+          <span id="aspectLabel">1:1</span>
+        </button>
+        <button class="chip hidden" id="resChip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+          <span id="resLabel">480p</span>
+        </button>
+        <div class="stepper" id="stepper">
+          <button id="stepDown" aria-label="Decrease">−</button>
+          <span class="val" id="stepVal">1<small>/4</small></span>
+          <button id="stepUp" aria-label="Increase">+</button>
+        </div>
+      </div>
+    </div>
+    <button class="generate" id="generateBtn">Generate
+      <small><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></svg><span id="genCount">1</span></small>
+    </button>
+  </div>
+</div>
+
+<input type="file" id="frameInput" accept="image/*" class="hidden">
+
+<div class="backdrop hidden" id="keyModal">
+  <div class="modal" role="dialog" aria-labelledby="keyTitle">
+    <h3 id="keyTitle">OpenRouter API key</h3>
+    <p>Your key stays in this browser and is only sent to openrouter.ai. Get one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.</p>
+    <input id="apiKey" type="password" placeholder="sk-or-..." autocomplete="off" spellcheck="false">
+    <label class="row"><input id="rememberKey" type="checkbox"> Remember on this device</label>
+    <div class="actions">
+      <button class="btn" id="keyCancel">Close</button>
+      <button class="btn primary" id="keySave">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (() => {
   const API = "https://openrouter.ai/api/v1";
   const ENHANCER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
-  const VIDEO_MODEL = "heygen/heygen-video-1";
+  const VIDEO_MODEL = { id: "heygen/heygen-video-1", name: "HeyGen Video 1", mark: "H" };
   const IMAGE_MODELS = [
-    { id: "openai/gpt-image-2", name: "GPT Image 2", note: "~$0.006 / image" },
-    { id: "black-forest-labs/flux.2-klein-4b", name: "FLUX.2 Klein 4B", note: "~$0.014 / image" },
-    { id: "sourceful/riverflow-v2.5-fast", name: "Riverflow v2.5 Fast", note: "~$0.018 / image" },
+    { id: "openai/gpt-image-2", name: "GPT Image 2", note: "~$0.006 / image", mark: "G" },
+    { id: "black-forest-labs/flux.2-klein-4b", name: "FLUX.2 Klein 4B", note: "~$0.014 / image", mark: "F" },
+    { id: "sourceful/riverflow-v2.5-fast", name: "Riverflow v2.5 Fast", note: "~$0.018 / image", mark: "R" },
   ];
+  const IMAGE_ASPECTS = ["1:1", "3:4", "4:3", "9:16", "16:9"];
+  const VIDEO_ASPECTS = ["Auto", "16:9", "9:16", "1:1"];
+  const VIDEO_RES = [{ v: "480p", note: "Cheaper" }, { v: "768p", note: "Sharper" }];
 
   const $ = (id) => document.getElementById(id);
-  let mode = "image";
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
+
+  const state = {
+    mode: "image",
+    imageModels: [IMAGE_MODELS[0].id],
+    imageAspect: "1:1",
+    count: 1,          // images per model
+    videoAspect: "Auto",
+    videoRes: "480p",
+    duration: 5,       // seconds
+    autoEnhance: false,
+    frame: null,       // { name, dataUrl }
+    busy: false,
+  };
 
   // ---------- storage (best effort) ----------
   const store = {
@@ -183,59 +343,181 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch {} },
     del(k) { try { localStorage.removeItem(k); } catch {} },
   };
-  const savedKey = store.get("or_key");
-  if (savedKey) { $("apiKey").value = savedKey; $("rememberKey").checked = true; }
-  const persistKey = () => {
-    if ($("rememberKey").checked) store.set("or_key", $("apiKey").value.trim());
-    else store.del("or_key");
-  };
-  $("rememberKey").addEventListener("change", persistKey);
-  $("apiKey").addEventListener("input", persistKey);
+  let apiKey = store.get("or_key") || "";
+  if (apiKey) $("rememberKey").checked = true;
 
-  // ---------- UI setup ----------
-  $("imageModels").innerHTML = IMAGE_MODELS.map((m, i) => `
-    <label><input type="checkbox" value="${m.id}" ${i === 0 ? "checked" : ""}>
-      <span>${m.name}<small>${m.id} · ${m.note}</small></span></label>`).join("");
-
-  for (let s = 5; s <= 15; s++) {
-    $("vidDuration").insertAdjacentHTML("beforeend", `<option value="${s}" ${s === 5 ? "selected" : ""}>${s}s</option>`);
-  }
-
-  function setMode(m) {
-    mode = m;
-    $("tab-image").setAttribute("aria-selected", m === "image");
-    $("tab-video").setAttribute("aria-selected", m === "video");
-    $("imagePanel").classList.toggle("hidden", m !== "image");
-    $("videoPanel").classList.toggle("hidden", m !== "video");
-  }
-  $("tab-image").onclick = () => setMode("image");
-  $("tab-video").onclick = () => setMode("video");
-
-  function status(id, msg, kind = "") {
-    const el = $(id);
+  // ---------- status ----------
+  function status(msg, kind = "") {
+    const el = $("status");
     el.textContent = msg;
+    el.title = msg;
     el.className = "status" + (kind ? " " + kind : "");
   }
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // ---------- render controls ----------
+  function render() {
+    const img = state.mode === "image";
+    document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.mode === state.mode));
+
+    const picked = IMAGE_MODELS.filter((m) => state.imageModels.includes(m.id));
+    const first = img ? (picked[0] || IMAGE_MODELS[0]) : VIDEO_MODEL;
+    $("modelMark").textContent = first.mark;
+    $("modelLabel").textContent = img && picked.length > 1 ? `${first.name} +${picked.length - 1}` : first.name;
+    $("heroModel").textContent = img && picked.length > 1 ? `${picked.length} image models` : first.name;
+    $("heroSub").textContent = img
+      ? "Describe a scene, character, mood, or style — and watch it come to life"
+      : "Describe a shot, motion, and sound — HeyGen turns it into a short clip with audio";
+
+    $("aspectLabel").textContent = img ? state.imageAspect : state.videoAspect;
+    $("resChip").classList.toggle("hidden", img);
+    $("resLabel").textContent = state.videoRes;
+    $("attachBtn").classList.toggle("hidden", img);
+    $("frameChip").classList.toggle("hidden", img || !state.frame);
+    if (state.frame) $("frameThumb").src = state.frame.dataUrl;
+    $("autoChip").classList.toggle("on", state.autoEnhance);
+
+    if (img) {
+      $("stepVal").innerHTML = `${state.count}<small>/4</small>`;
+      $("stepDown").disabled = state.count <= 1;
+      $("stepUp").disabled = state.count >= 4;
+      $("genCount").textContent = state.count * Math.max(1, picked.length);
+    } else {
+      $("stepVal").innerHTML = `${state.duration}<small>s</small>`;
+      $("stepDown").disabled = state.duration <= 5;
+      $("stepUp").disabled = state.duration >= 15;
+      $("genCount").textContent = 1;
+    }
+    $("stepper").title = img ? "Images per model" : "Video length";
+    $("generateBtn").disabled = state.busy;
+    $("enhanceBtn").disabled = state.busy;
+    $("keyDot").classList.toggle("on", !!apiKey);
+  }
+
+  document.querySelectorAll(".nav-link").forEach((b) => b.onclick = () => { state.mode = b.dataset.mode; closeMenu(); render(); });
+  $("stepDown").onclick = () => { state.mode === "image" ? state.count-- : state.duration--; render(); };
+  $("stepUp").onclick = () => { state.mode === "image" ? state.count++ : state.duration++; render(); };
+  $("autoChip").onclick = () => { state.autoEnhance = !state.autoEnhance; render(); };
+
+  // ---------- popover menus ----------
+  let openMenu = null;
+  function closeMenu() { if (openMenu) { openMenu.el.remove(); openMenu = null; } }
+  function showMenu(anchor, build) {
+    const same = openMenu && openMenu.anchor === anchor;
+    closeMenu();
+    if (same) return;
+    const el = document.createElement("div");
+    el.className = "menu";
+    document.body.appendChild(el);
+    openMenu = { el, anchor };
+    const draw = () => { el.innerHTML = build(); position(); };
+    const position = () => {
+      const r = anchor.getBoundingClientRect();
+      const w = el.offsetWidth, h = el.offsetHeight;
+      el.style.left = Math.max(16, Math.min(r.left, innerWidth - w - 16)) + "px";
+      el.style.top = Math.max(8, r.top - h - 8) + "px";
+    };
+    el.addEventListener("click", (e) => {
+      const opt = e.target.closest(".opt");
+      if (!opt) return;
+      e.stopPropagation();
+      if (openMenu.onPick(opt.dataset.v) === "keep") draw(); else closeMenu();
+      render();
+    });
+    draw();
+    return openMenu;
+  }
+  document.addEventListener("click", (e) => {
+    if (openMenu && !openMenu.el.contains(e.target) && !openMenu.anchor.contains(e.target)) closeMenu();
+  });
+  addEventListener("resize", closeMenu);
+  addEventListener("keydown", (e) => { if (e.key === "Escape") { closeMenu(); $("keyModal").classList.add("hidden"); } });
+
+  $("modelChip").onclick = () => {
+    if (state.mode === "video") {
+      const m = showMenu($("modelChip"), () => `<h4>Video model</h4>
+        <button class="opt sel" data-v="v"><span class="model-mark">H</span><span class="grow">${VIDEO_MODEL.name}<small>${VIDEO_MODEL.id} · 5–15s with audio</small></span><span class="tick">${CHECK}</span></button>`);
+      if (m) m.onPick = () => {};
+      return;
+    }
+    const m = showMenu($("modelChip"), () => `<h4>Image models · pick one or more</h4>` + IMAGE_MODELS.map((x) => `
+      <button class="opt ${state.imageModels.includes(x.id) ? "sel" : ""}" data-v="${x.id}">
+        <span class="model-mark">${x.mark}</span>
+        <span class="grow">${x.name}<small>${x.id} · ${x.note}</small></span>
+        <span class="tick">${CHECK}</span></button>`).join(""));
+    if (m) m.onPick = (id) => {
+      const has = state.imageModels.includes(id);
+      if (has && state.imageModels.length === 1) return "keep";
+      state.imageModels = has ? state.imageModels.filter((x) => x !== id) : IMAGE_MODELS.map((x) => x.id).filter((x) => x === id || state.imageModels.includes(x));
+      return "keep";
+    };
+  };
+
+  const ratioIcon = (r) => {
+    if (r === "Auto") return '<span class="ratio">◎</span>';
+    const [w, h] = r.split(":").map(Number), s = 14 / Math.max(w, h);
+    return `<span class="ratio"><i style="width:${w * s}px;height:${h * s}px"></i></span>`;
+  };
+  $("aspectChip").onclick = () => {
+    const img = state.mode === "image";
+    const list = img ? IMAGE_ASPECTS : VIDEO_ASPECTS;
+    const cur = img ? state.imageAspect : state.videoAspect;
+    const m = showMenu($("aspectChip"), () => `<h4>Aspect ratio</h4>` + list.map((r) => `
+      <button class="opt ${r === cur ? "sel" : ""}" data-v="${r}">${ratioIcon(r)}<span class="grow">${r === "Auto" ? "Model default" : r}</span><span class="tick">${CHECK}</span></button>`).join(""));
+    if (m) m.onPick = (v) => { img ? state.imageAspect = v : state.videoAspect = v; };
+  };
+  $("resChip").onclick = () => {
+    const m = showMenu($("resChip"), () => `<h4>Resolution</h4>` + VIDEO_RES.map((r) => `
+      <button class="opt ${r.v === state.videoRes ? "sel" : ""}" data-v="${r.v}"><span class="grow">${r.v}<small>${r.note}</small></span><span class="tick">${CHECK}</span></button>`).join(""));
+    if (m) m.onPick = (v) => { state.videoRes = v; };
+  };
+
+  // ---------- start frame ----------
+  $("attachBtn").onclick = () => $("frameInput").click();
+  $("frameInput").onchange = () => {
+    const f = $("frameInput").files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { state.frame = { name: f.name, dataUrl: r.result }; render(); };
+    r.onerror = () => status("Could not read that image.", "error");
+    r.readAsDataURL(f);
+    $("frameInput").value = "";
+  };
+  $("frameChip").onclick = () => { state.frame = null; render(); };
+
+  // ---------- API key modal ----------
+  function openKeyModal() {
+    $("apiKey").value = apiKey;
+    $("keyModal").classList.remove("hidden");
+    setTimeout(() => $("apiKey").focus(), 0);
+  }
+  $("keyBtn").onclick = openKeyModal;
+  $("keyCancel").onclick = () => $("keyModal").classList.add("hidden");
+  $("keyModal").onclick = (e) => { if (e.target === $("keyModal")) $("keyModal").classList.add("hidden"); };
+  $("keySave").onclick = () => {
+    apiKey = $("apiKey").value.trim();
+    if ($("rememberKey").checked && apiKey) store.set("or_key", apiKey); else store.del("or_key");
+    $("keyModal").classList.add("hidden");
+    status(apiKey ? "API key saved." : "API key cleared.", apiKey ? "ok" : "");
+    render();
+  };
+  $("apiKey").addEventListener("keydown", (e) => { if (e.key === "Enter") $("keySave").click(); });
+
+  // ---------- prompt box ----------
+  const prompt = $("prompt");
+  const autosize = () => { prompt.style.height = "auto"; prompt.style.height = Math.min(prompt.scrollHeight, 160) + "px"; };
+  prompt.addEventListener("input", autosize);
+  prompt.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $("generateBtn").click(); }
+  });
 
   // ---------- API helpers ----------
-  function key() {
-    const k = $("apiKey").value.trim();
-    if (!k) throw new Error("Add your OpenRouter API key first.");
-    return k;
-  }
-  function headers() {
-    return {
-      "Authorization": "Bearer " + key(),
-      "Content-Type": "application/json",
-      "X-Title": "OpenRouter Studio",
-    };
+  function needKey() {
+    if (!apiKey) { openKeyModal(); throw new Error("Add your OpenRouter API key first."); }
   }
   async function api(path, body) {
     const url = path.startsWith("http") ? path : API + path;
-    const res = await fetch(url, body
-      ? { method: "POST", headers: headers(), body: JSON.stringify(body) }
-      : { headers: headers() });
+    const headers = { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json", "X-Title": "OpenRouter Studio" };
+    const res = await fetch(url, body ? { method: "POST", headers, body: JSON.stringify(body) } : { headers });
     const text = await res.text();
     let data;
     try { data = JSON.parse(text); } catch { data = { raw: text }; }
@@ -247,7 +529,7 @@
   }
 
   // ---------- prompt enhancement ----------
-  async function enhance(prompt, target) {
+  async function enhance(text, target) {
     const guide = target === "video"
       ? "Rewrite it as a vivid prompt for a short AI video clip: describe the subject, action and motion over time, camera movement, setting, lighting, mood, and any sounds or spoken lines."
       : "Rewrite it as a vivid prompt for an AI image: describe the subject, composition, setting, lighting, color palette, style and mood.";
@@ -256,7 +538,7 @@
       messages: [
         { role: "system", content: "You improve prompts for generative media models. " + guide +
           " Keep the user's intent. Stay under 120 words. Reply with ONLY the improved prompt, no preamble, quotes or notes." },
-        { role: "user", content: prompt },
+        { role: "user", content: text },
       ],
       reasoning: { effort: "low", exclude: true },
     });
@@ -265,145 +547,131 @@
     if (!out) throw new Error("The enhancer returned an empty prompt.");
     return out;
   }
-
-  async function runEnhance(statusId) {
-    const p = $("prompt").value.trim();
+  async function runEnhance() {
+    const p = prompt.value.trim();
     if (!p) throw new Error("Write a prompt first.");
-    status(statusId, "Enhancing prompt with Nemotron 3 Ultra…");
-    const better = await enhance(p, mode);
-    $("prompt").value = better;
-    status(statusId, "Prompt enhanced.", "ok");
-    return better;
+    status("Enhancing prompt with Nemotron 3 Ultra…");
+    prompt.value = await enhance(p, state.mode);
+    autosize();
+    status("Prompt enhanced.", "ok");
+    return prompt.value;
   }
-
   $("enhanceBtn").onclick = async () => {
-    const btn = $("enhanceBtn");
-    btn.disabled = true;
-    try { await runEnhance("enhanceStatus"); }
-    catch (e) { status("enhanceStatus", e.message, "error"); }
-    finally { btn.disabled = false; }
+    if (state.busy) return;
+    state.busy = true; render();
+    try { needKey(); await runEnhance(); }
+    catch (e) { status(e.message, "error"); }
+    finally { state.busy = false; render(); }
   };
 
-  async function getPrompt() {
-    if ($("autoEnhance").checked) return runEnhance("enhanceStatus");
-    const p = $("prompt").value.trim();
-    if (!p) throw new Error("Write a prompt first.");
-    return p;
+  // ---------- gallery ----------
+  function addCard(label, isVideo) {
+    $("hero").classList.add("hidden");
+    $("gallerySection").classList.remove("hidden");
+    const card = document.createElement("div");
+    card.className = "card" + (isVideo ? " is-video" : "");
+    card.innerHTML = `<div class="pending" style="aspect-ratio:${cssRatio(isVideo ? state.videoAspect : state.imageAspect)}">
+      <div class="spinner"></div><b>${esc(label)}</b><span class="msg">Generating…</span></div>`;
+    $("gallery").prepend(card);
+    return card;
   }
+  const cssRatio = (r) => r === "Auto" ? "16 / 9" : r.replace(":", " / ");
+  const failCard = (card, label, msg) => { card.innerHTML = `<div class="fail"><b>${esc(label)}</b>${esc(msg)}</div>`; };
+  $("clearBtn").onclick = () => {
+    $("gallery").querySelectorAll("video[src^=blob]").forEach((v) => URL.revokeObjectURL(v.src));
+    $("gallery").innerHTML = "";
+    $("gallerySection").classList.add("hidden");
+    $("hero").classList.remove("hidden");
+  };
 
-  // ---------- images ----------
-  $("genImageBtn").onclick = async () => {
-    const btn = $("genImageBtn");
-    const models = [...$("imageModels").querySelectorAll("input:checked")].map((i) => i.value);
-    btn.disabled = true;
+  // ---------- generate ----------
+  $("generateBtn").onclick = async () => {
+    if (state.busy) return;
+    state.busy = true; render();
     try {
-      key();
-      if (!models.length) throw new Error("Pick at least one image model.");
-      const prompt = await getPrompt();
-      const aspect = $("imgAspect").value;
-      status("imageStatus", `Generating with ${models.length} model(s)…`);
-
-      const cards = models.map((m) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `<div class="wait">Generating with ${esc(m)}…</div>`;
-        $("imageResults").prepend(card);
-        return card;
-      });
-
-      const results = await Promise.allSettled(models.map(async (model, i) => {
-        const data = await api("/images", { model, prompt, aspect_ratio: aspect, n: 1 });
-        const item = data.data?.[0];
-        if (!item?.b64_json && !item?.url) throw new Error("No image returned.");
-        const src = item.b64_json ? `data:${item.media_type || "image/png"};base64,${item.b64_json}` : item.url;
-        const ext = (item.media_type || "image/png").split("/")[1].replace("svg+xml", "svg");
-        const cost = data.usage?.cost != null ? ` · $${Number(data.usage.cost).toFixed(4)}` : "";
-        cards[i].innerHTML = `<img alt="${esc(prompt)}" src="${src}">
-          <div class="meta"><span>${esc(model)}${cost}</span><a download="image-${Date.now()}.${ext}" href="${src}">Download</a></div>`;
-      }));
-
-      results.forEach((r, i) => {
-        if (r.status === "rejected") cards[i].innerHTML = `<div class="err"><b>${esc(models[i])}</b><br>${esc(r.reason.message)}</div>`;
-      });
-      const ok = results.filter((r) => r.status === "fulfilled").length;
-      status("imageStatus", `Done: ${ok}/${models.length} image(s) generated.`, ok ? "ok" : "error");
+      needKey();
+      if (!prompt.value.trim()) throw new Error("Describe what you want to create first.");
+      const text = state.autoEnhance ? await runEnhance() : prompt.value.trim();
+      if (state.mode === "image") await generateImages(text); else await generateVideo(text);
     } catch (e) {
-      status("imageStatus", e.message, "error");
+      status(e.message, "error");
     } finally {
-      btn.disabled = false;
+      state.busy = false; render();
     }
   };
 
-  // ---------- video ----------
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const fileToDataUrl = (f) => new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result);
-    r.onerror = () => rej(new Error("Could not read the start frame image."));
-    r.readAsDataURL(f);
-  });
-
-  $("genVideoBtn").onclick = async () => {
-    const btn = $("genVideoBtn");
-    btn.disabled = true;
-    let card;
-    try {
-      key();
-      const prompt = await getPrompt();
-      const body = {
-        model: VIDEO_MODEL,
-        prompt,
-        duration: Number($("vidDuration").value),
-        resolution: $("vidRes").value,
-      };
-      if ($("vidAspect").value) body.aspect_ratio = $("vidAspect").value;
-      const frame = $("vidFrame").files[0];
-      if (frame) {
-        body.frame_images = [{ type: "image_url", image_url: { url: await fileToDataUrl(frame) }, frame_type: "first_frame" }];
+  async function generateImages(text) {
+    const models = IMAGE_MODELS.filter((m) => state.imageModels.includes(m.id));
+    const jobs = models.flatMap((m) => Array.from({ length: state.count }, () => m));
+    const aspect = state.imageAspect;
+    status(`Generating ${jobs.length} image(s)…`);
+    const results = await Promise.allSettled(jobs.map(async (m) => {
+      const card = addCard(m.name, false);
+      try {
+        const data = await api("/images", { model: m.id, prompt: text, aspect_ratio: aspect, n: 1 });
+        const item = data.data?.[0];
+        if (!item?.b64_json && !item?.url) throw new Error("No image returned.");
+        const type = item.media_type || "image/png";
+        const src = item.b64_json ? `data:${type};base64,${item.b64_json}` : item.url;
+        const ext = type.split("/")[1].replace("svg+xml", "svg").replace("jpeg", "jpg");
+        const cost = data.usage?.cost != null ? ` · $${Number(data.usage.cost).toFixed(4)}` : "";
+        card.innerHTML = `<img alt="${esc(text)}" src="${src}">
+          <div class="overlay"><span>${esc(m.name)}${cost}</span><a class="dl" download="image-${Date.now()}.${ext}" href="${src}">Download</a></div>`;
+      } catch (e) {
+        failCard(card, m.name, e.message);
+        throw e;
       }
+    }));
+    const ok = results.filter((r) => r.status === "fulfilled").length;
+    status(`Done: ${ok}/${jobs.length} image(s) generated.`, ok ? "ok" : "error");
+  }
 
-      card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `<div class="wait">Submitting video job…</div>`;
-      $("videoResults").prepend(card);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-      status("videoStatus", "Submitting to HeyGen Video 1…");
+  async function generateVideo(text) {
+    const body = { model: VIDEO_MODEL.id, prompt: text, duration: state.duration, resolution: state.videoRes };
+    if (state.videoAspect !== "Auto") body.aspect_ratio = state.videoAspect;
+    if (state.frame) body.frame_images = [{ type: "image_url", image_url: { url: state.frame.dataUrl }, frame_type: "first_frame" }];
+
+    const card = addCard(VIDEO_MODEL.name, true);
+    const msg = (t) => { const el = card.querySelector(".msg"); if (el) el.textContent = t; };
+    try {
+      status("Submitting to HeyGen Video 1…");
       const job = await api("/videos", body);
       const pollUrl = job.polling_url || `${API}/videos/${job.id}`;
       const started = Date.now();
-
-      let state = job;
-      while (!["completed", "failed", "cancelled", "expired"].includes(state.status)) {
+      let s = job;
+      while (!["completed", "failed", "cancelled", "expired"].includes(s.status)) {
         const secs = Math.round((Date.now() - started) / 1000);
-        status("videoStatus", `Status: ${state.status || "pending"} · ${secs}s elapsed`);
-        card.querySelector(".wait").textContent = `Generating video… ${secs}s`;
+        status(`Video ${s.status || "pending"} · ${secs}s elapsed`);
+        msg(`${s.status === "in_progress" ? "Rendering" : "Queued"} · ${secs}s`);
         if (secs > 20 * 60) throw new Error("Timed out after 20 minutes.");
         await sleep(5000);
-        state = await api(pollUrl);
+        s = await api(pollUrl);
       }
-      if (state.status !== "completed") {
-        const why = state.error?.message || state.error || state.status;
-        throw new Error(`Video ${state.status}: ${typeof why === "string" ? why : JSON.stringify(why)}`);
+      if (s.status !== "completed") {
+        const why = s.error?.message || s.error || s.status;
+        throw new Error(`Video ${s.status}: ${typeof why === "string" ? why : JSON.stringify(why)}`);
       }
-
-      status("videoStatus", "Downloading video…");
-      const contentUrl = state.unsigned_urls?.[0] || `${API}/videos/${job.id}/content?index=0`;
-      const res = await fetch(contentUrl, { headers: { Authorization: "Bearer " + key() } });
+      status("Downloading video…");
+      msg("Downloading…");
+      const contentUrl = s.unsigned_urls?.[0] || `${API}/videos/${job.id}/content?index=0`;
+      const res = await fetch(contentUrl, { headers: { Authorization: "Bearer " + apiKey } });
       if (!res.ok) throw new Error(`Download failed: ${res.status} ${res.statusText}`);
       const url = URL.createObjectURL(await res.blob());
-      const cost = state.usage?.cost != null ? ` · $${Number(state.usage.cost).toFixed(3)}` : "";
-
+      const cost = s.usage?.cost != null ? ` · $${Number(s.usage.cost).toFixed(3)}` : "";
       card.innerHTML = `<video controls playsinline src="${url}"></video>
-        <div class="meta"><span>HeyGen Video 1 · ${body.duration}s · ${body.resolution}${cost}</span>
-        <a download="video-${Date.now()}.mp4" href="${url}">Download</a></div>`;
-      status("videoStatus", `Done in ${Math.round((Date.now() - started) / 1000)}s.`, "ok");
+        <div class="overlay"><span>${VIDEO_MODEL.name} · ${body.duration}s · ${body.resolution}${cost}</span>
+        <a class="dl" download="video-${Date.now()}.mp4" href="${url}">Download</a></div>`;
+      status(`Video done in ${Math.round((Date.now() - started) / 1000)}s.`, "ok");
     } catch (e) {
-      status("videoStatus", e.message, "error");
-      if (card) card.innerHTML = `<div class="err">${esc(e.message)}</div>`;
-    } finally {
-      btn.disabled = false;
+      failCard(card, VIDEO_MODEL.name, e.message);
+      throw e;
     }
-  };
+  }
+
+  render();
+  if (!apiKey) status("Click “API key” in the top right to add your OpenRouter key.");
 })();
 </script>
 </body>
